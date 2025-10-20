@@ -23,7 +23,7 @@ api.interceptors.request.use(
     const token = localStorage.getItem('authToken');
     
     if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = token;
     }
     
     return config;
@@ -59,7 +59,7 @@ api.interceptors.response.use(
           localStorage.setItem('refreshToken', novoRefreshToken);
           
           // Refaz a requisição original com o novo token
-          originalRequest.headers.Authorization = `Bearer ${novoToken}`;
+          originalRequest.headers.Authorization = novoToken;
           return api(originalRequest);
           
         } catch (refreshError) {

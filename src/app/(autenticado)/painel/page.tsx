@@ -30,47 +30,81 @@ export default function PaginaPainel() {
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    carregarEstatisticas();
+    // Adicionar um delay para evitar requisições simultâneas na inicialização
+    const timer = setTimeout(() => {
+      carregarEstatisticas();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const carregarEstatisticas = async () => {
+    // Verificar se já está carregando para evitar múltiplas execuções
+    if (carregando) return;
+    
     try {
       setCarregando(true);
       setErro(null);
 
-      // Carregar dados com fallbacks para evitar erros
-      const resultados = await Promise.allSettled([
-        relacionamentos.listarRelacionamentos().catch(() => []),
-        contratos.listarContratos().catch(() => []),
-        pagamentos.listarPagamentos().catch(() => []),
-        notasFiscais.listarNotasFiscais().catch(() => []),
-        relacionamentos.obterReceitasMensais().catch(() => []),
-        relacionamentos.obterCompromissosMensais().catch(() => [])
-      ]);
+      // Valores padrão para evitar requisições desnecessárias durante desenvolvimento
+      const estatisticasBase = {
+        totalUsuarios: 0,
+        totalContratos: 0,
+        totalPagamentos: 0,
+        totalNotasFiscais: 0,
+        receitaMensal: 0,
+        compromissosMes: 0
+      };
 
-      // Extrair dados mesmo se algumas APIs falharam
-      const usuariosRel = resultados[0].status === 'fulfilled' ? resultados[0].value : [];
-      const contratosList = resultados[1].status === 'fulfilled' ? resultados[1].value : [];
-      const pagamentosList = resultados[2].status === 'fulfilled' ? resultados[2].value : [];
-      const notasList = resultados[3].status === 'fulfilled' ? resultados[3].value : [];
-      const receitas = resultados[4].status === 'fulfilled' ? resultados[4].value : [];
-      const compromissos = resultados[5].status === 'fulfilled' ? resultados[5].value : [];
+      try {
+        // Carregar dados básicos primeiro
+        const [usuariosRel, contratosList] = await Promise.allSettled([
+          relacionamentos.listarRelacionamentos(),
+          contratos.listarContratos()
+        ]);
 
-      const receitaTotal = Array.isArray(receitas) ? 
-        receitas.reduce((acc: number, item: any) => acc + (item?.valor || 0), 0) : 0;
-      const compromissosTotal = Array.isArray(compromissos) ? compromissos.length : 0;
+        const usuariosDados = usuariosRel.status === 'fulfilled' ? usuariosRel.value : [];
+        const contratosDados = contratosList.status === 'fulfilled' ? contratosList.value : [];
 
-      setEstatisticas({
-        totalUsuarios: Array.isArray(usuariosRel) ? usuariosRel.length : 0,
-        totalContratos: Array.isArray(contratosList) ? contratosList.length : 0,
-        totalPagamentos: Array.isArray(pagamentosList) ? pagamentosList.length : 0,
-        totalNotasFiscais: Array.isArray(notasList) ? notasList.length : 0,
-        receitaMensal: receitaTotal,
-        compromissosMes: compromissosTotal
-      });
+        // Carregar dados financeiros separadamente se os básicos funcionaram
+        let pagamentosList: any = [];
+        let notasList: any = [];
+        let receitas: any = [];
+        let compromissos: any = [];
+
+        if (usuariosRel.status === 'fulfilled' || contratosList.status === 'fulfilled') {
+          const [pagamentosRes, notasRes, receitasRes, compromissosRes] = await Promise.allSettled([
+            pagamentos.listarPagamentos(),
+            notasFiscais.listarNotasFiscais(),
+            relacionamentos.obterReceitasMensais(),
+            relacionamentos.obterCompromissosMensais()
+          ]);
+
+          pagamentosList = pagamentosRes.status === 'fulfilled' ? pagamentosRes.value : [];
+          notasList = notasRes.status === 'fulfilled' ? notasRes.value : [];
+          receitas = receitasRes.status === 'fulfilled' ? receitasRes.value : [];
+          compromissos = compromissosRes.status === 'fulfilled' ? compromissosRes.value : [];
+        }
+
+        const receitaTotal = Array.isArray(receitas) ? 
+          receitas.reduce((acc: number, item: any) => acc + (item?.valor || 0), 0) : 0;
+        const compromissosTotal = Array.isArray(compromissos) ? compromissos.length : 0;
+
+        setEstatisticas({
+          totalUsuarios: Array.isArray(usuariosDados) ? usuariosDados.length : 0,
+          totalContratos: Array.isArray(contratosDados) ? contratosDados.length : 0,
+          totalPagamentos: Array.isArray(pagamentosList) ? pagamentosList.length : 0,
+          totalNotasFiscais: Array.isArray(notasList) ? notasList.length : 0,
+          receitaMensal: receitaTotal,
+          compromissosMes: compromissosTotal
+        });
+      } catch (apiError) {
+        // Se todas as APIs falharam, usar valores padrão
+        setEstatisticas(estatisticasBase);
+        setErro('Não foi possível carregar os dados. Verifique sua conexão e tente novamente.');
+      }
     } catch (error: any) {
       console.error('Erro ao carregar estatísticas:', error);
-      // Em caso de erro completo, definir valores padrão
       setEstatisticas({
         totalUsuarios: 0,
         totalContratos: 0,
@@ -79,7 +113,7 @@ export default function PaginaPainel() {
         receitaMensal: 0,
         compromissosMes: 0
       });
-      setErro('Algumas informações podem não estar atualizadas devido a problemas de conectividade.');
+      setErro('Erro inesperado ao carregar o painel.');
     } finally {
       setCarregando(false);
     }
