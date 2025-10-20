@@ -68,19 +68,33 @@ export enum TipoConvite {
 
 export interface Contrato {
   id: string;
-  clienteId: string;
-  fornecedorId: string;
-  titulo: string;
-  descricao?: string;
-  valorTotal: number;
-  valorMensal?: number;
-  dataInicio: string;
-  dataVencimento?: string;
+  providerId: string; // baseado na API
+  title: string; // baseado na API
+  description?: string; // baseado na API
+  valueTotal: number; // baseado na API
+  monthlyValue?: number; // baseado na API
+  startDate: string; // baseado na API
+  expirationDate?: string; // baseado na API
   status: StatusContrato;
-  cliente: Empresa;
-  fornecedor: Empresa;
-  criadoEm: string;
-  atualizadoEm: string;
+  
+  // Campos adicionais que podem estar na resposta
+  cliente?: Empresa;
+  fornecedor?: Empresa;
+  criadoEm?: string;
+  atualizadoEm?: string;
+  
+  // Aliases para compatibilidade com código existente
+  clienteId?: string;
+  fornecedorId?: string;
+  titulo?: string;
+  descricao?: string;
+  valorTotal?: number;
+  valorMensal?: number;
+  dataInicio?: string;
+  dataVencimento?: string;
+  dataFim?: string;
+  valor?: number;
+  nomeEmpresaContratante?: string;
 }
 
 export enum StatusContrato {

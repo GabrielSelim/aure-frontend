@@ -7,22 +7,15 @@ import {
 } from '../tipos';
 import { obterDados, atualizarDados } from './api';
 
-// Obter dados completos da empresa atual
+// NOTA: Não há endpoints específicos para empresas na API documentada
+// Os dados da empresa vêm junto com o login e perfil do usuário
+
+// Função placeholder para manter compatibilidade
 export const obterEmpresaAtual = async (): Promise<Empresa> => {
-  return await obterDados<Empresa>('/Companies/current');
+  throw new Error('Endpoint não disponível na API atual. Dados da empresa vêm do contexto de autenticação.');
 };
 
-// Atualizar dados da empresa
+// Função placeholder para manter compatibilidade  
 export const atualizarEmpresa = async (dados: Partial<Empresa>): Promise<Empresa> => {
-  return await atualizarDados<Empresa>('/Companies/current', dados);
-};
-
-// Obter configurações da empresa
-export const obterConfiguracoes = async (): Promise<any> => {
-  return await obterDados<any>('/Companies/configuracoes');
-};
-
-// Atualizar configurações da empresa
-export const atualizarConfiguracoes = async (dados: any): Promise<void> => {
-  return await atualizarDados<void>('/Companies/configuracoes', dados);
+  throw new Error('Endpoint não disponível na API atual. Atualizações de empresa devem ser feitas através de outros meios.');
 };

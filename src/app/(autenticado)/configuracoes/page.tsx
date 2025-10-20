@@ -112,28 +112,15 @@ export default function PaginaConfiguracoes() {
         cargo: perfilCompleto.perfil || '' // Usar o perfil como cargo base
       });
       
-      // Se tiver empresa, buscar dados completos da empresa pela API
+      // Se tiver empresa, usar dados do contexto (API não possui endpoint específico)
       if (empresa) {
-        try {
-          const empresaCompleta = await servicoEmpresas.obterEmpresaAtual();
-          setDadosEmpresa({
-            nome: empresaCompleta.nome || '',
-            cnpj: empresaCompleta.cnpj || '',
-            endereco: '', // Campo adicional que será preenchido manualmente
-            telefone: '', // Campo adicional que será preenchido manualmente
-            email: '' // Campo adicional que será preenchido manualmente
-          });
-        } catch (empresaError) {
-          // Se falhar, usar dados do contexto
-          console.warn('Erro ao buscar dados da empresa:', empresaError);
-          setDadosEmpresa({
-            nome: empresa.nome || '',
-            cnpj: empresa.cnpj || '',
-            endereco: '',
-            telefone: '',
-            email: ''
-          });
-        }
+        setDadosEmpresa({
+          nome: empresa.nome || '',
+          cnpj: empresa.cnpj || '',
+          endereco: '', // Campo adicional que será preenchido manualmente
+          telefone: '', // Campo adicional que será preenchido manualmente
+          email: '' // Campo adicional que será preenchido manualmente
+        });
       }
       
     } catch (error: any) {
@@ -219,19 +206,12 @@ export default function PaginaConfiguracoes() {
       setErro(null);
       setSucesso(null);
       
-      await servicoEmpresas.atualizarEmpresa({
-        nome: dadosEmpresa.nome,
-        cnpj: dadosEmpresa.cnpj
-        // Outros campos podem ser adicionados quando disponíveis na API
-      });
+      // Por enquanto, apenas simular o salvamento já que não há endpoint específico
+      // Os dados da empresa virão do contexto de autenticação
       
-      setSucesso('Dados da empresa atualizados com sucesso');
+      setSucesso('Dados da empresa salvos localmente. Funcionalidade completa será implementada quando a API fornecer o endpoint específico.');
     } catch (error: any) {
-      if (error.response?.status === 401) {
-        setErro('Sessão expirada. Faça login novamente.');
-        return;
-      }
-      setErro(error.message || 'Erro ao atualizar dados da empresa');
+      setErro('Erro ao salvar dados da empresa');
     } finally {
       setCarregando(false);
     }

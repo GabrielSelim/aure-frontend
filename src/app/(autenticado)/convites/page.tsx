@@ -44,9 +44,10 @@ export default function PaginaConvites() {
       setErro(null);
       setSucesso(null);
 
-      await convites.reenviarConvite(id);
-      setSucesso('Convite reenviado com sucesso');
-      await carregarConvites();
+      // Funcionalidade de reenvio não disponível na API atual
+      // TODO: Implementar quando API fornecer endpoint
+      setSucesso('Funcionalidade de reenvio será implementada em breve');
+      
     } catch (error: any) {
       setErro(error.message || 'Erro ao reenviar convite');
     } finally {
