@@ -12,21 +12,17 @@ export default function LayoutAutenticado({
 }: {
   children: React.ReactNode;
 }) {
-  const { autenticado, carregando } = useAutenticacao();
-  const router = useRouter();
+  const { usuario, carregando } = useAutenticacao();
 
-  useEffect(() => {
-    if (!carregando && !autenticado) {
-      router.replace('/entrar');
-    }
-  }, [autenticado, carregando, router]);
-
+  // Mostrar loading enquanto carrega
   if (carregando) {
-    return <Carregando fullScreen texto="Verificando autenticação..." />;
+    return <Carregando fullScreen texto="Carregando..." />;
   }
 
-  if (!autenticado) {
-    return null;
+  // Se não há usuário, mostrar apenas um loading simples
+  // O middleware já deve ter redirecionado ou o contexto vai lidar
+  if (!usuario) {
+    return <Carregando fullScreen texto="Verificando autenticação..." />;
   }
 
   return (

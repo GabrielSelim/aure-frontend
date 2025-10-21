@@ -17,13 +17,43 @@ export const api = axios.create({
   timeout: 10000, // 10 segundos
 });
 
+const decodeBase64Url = (str: string): string => {
+  let s = str.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = s.length % 4;
+  if (pad === 2) s += '==';
+  else if (pad === 3) s += '=';
+  else if (pad !== 0) s += '===';
+  return atob(s);
+};
+
+const tokenEstaExpirado = (token: string): boolean => {
+  try {
+    if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+      return true;
+    }
+
+    const partes = token.split('.');
+    if (partes.length !== 3) {
+      return true;
+    }
+
+    const payloadJson = decodeBase64Url(partes[1]);
+    const payload = JSON.parse(payloadJson);
+    const agora = Math.floor(Date.now() / 1000);
+
+    return payload.exp ? payload.exp <= agora : false;
+  } catch (error) {
+    return true;
+  }
+};
+
 // Interceptador de requisições - adiciona token automaticamente
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('authToken');
     
-    if (token && config.headers) {
-      config.headers.Authorization = token;
+    if (token && token !== 'null' && token !== 'undefined' && token.trim() !== '' && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     
     return config;
@@ -33,6 +63,27 @@ api.interceptors.request.use(
   }
 );
 
+// Flags para evitar múltiplas operações simultâneas
+let redirecionandoParaLogin = false;
+let renovandoToken = false;
+
+// Função para limpar dados de autenticação e redirecionar
+const limparDadosERedirecionarParaLogin = () => {
+  if (!redirecionandoParaLogin) {
+    redirecionandoParaLogin = true;
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('usuario');
+    localStorage.removeItem('empresa');
+    
+    if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        window.location.href = '/entrar';
+      }, 100);
+    }
+  }
+};
+
 // Interceptador de respostas - trata erros e refresh token
 api.interceptors.response.use(
   (response: AxiosResponse) => {
@@ -41,47 +92,64 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // Se erro 401 e não é a primeira tentativa
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Se erro 401 e não é a primeira tentativa e não é a própria renovação de token
+    if (error.response?.status === 401 && 
+        !originalRequest._retry && 
+        !originalRequest.url?.includes('/Auth/renovar-token')) {
+      
       originalRequest._retry = true;
+      
+      // Evitar múltiplas renovações simultâneas
+      if (renovandoToken || redirecionandoParaLogin) {
+        return Promise.reject(error);
+      }
       
       const refreshToken = localStorage.getItem('refreshToken');
       
-      if (refreshToken) {
+      // Verificar se refresh token é válido e não está expirado
+      if (refreshToken && 
+          refreshToken !== 'null' && 
+          refreshToken !== 'undefined' && 
+          refreshToken.trim() !== '' &&
+          !tokenEstaExpirado(refreshToken)) {
         try {
+          renovandoToken = true;
+          
           const response = await api.post('/Auth/renovar-token', {
             refreshToken,
           });
           
-          const { token: novoToken, refreshToken: novoRefreshToken } = response.data;
+          const responseData = response.data.dados || response.data;
+          
+          // Normalizar propriedades da resposta
+          const novoToken = responseData.token || responseData.tokenAcesso;
+          const novoRefreshToken = responseData.refreshToken || responseData.tokenRenovacao;
+          
+          if (!novoToken) {
+            throw new Error('Token não recebido na renovação');
+          }
           
           localStorage.setItem('authToken', novoToken);
           localStorage.setItem('refreshToken', novoRefreshToken);
+          if (typeof document !== 'undefined') {
+            document.cookie = `authToken=${novoToken}; path=/`;
+            if (novoRefreshToken) document.cookie = `refreshToken=${novoRefreshToken}; path=/`;
+          }
           
-          // Refaz a requisição original com o novo token
-          originalRequest.headers.Authorization = novoToken;
+          originalRequest.headers.Authorization = `Bearer ${novoToken}`;
+          
+          renovandoToken = false;
           return api(originalRequest);
           
         } catch (refreshError) {
           // Se refresh falhou, redireciona para login
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('usuario');
-          
-          if (typeof window !== 'undefined') {
-            window.location.href = '/entrar';
-          }
-          
+          renovandoToken = false;
+          limparDadosERedirecionarParaLogin();
           return Promise.reject(refreshError);
         }
       } else {
-        // Não há refresh token, redireciona para login
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('usuario');
-        
-        if (typeof window !== 'undefined') {
-          window.location.href = '/entrar';
-        }
+        // Não há refresh token válido, redireciona para login
+        limparDadosERedirecionarParaLogin();
       }
     }
     
@@ -97,6 +165,12 @@ export const obterDados = async <T>(url: string, config = {}): Promise<T> => {
 
 export const enviarDados = async <T>(url: string, dados: any, config = {}): Promise<T> => {
   const response = await api.post<RespostaApi<T>>(url, dados, config);
+  
+  // Para respostas de autenticação, primeiro tentar response.data diretamente
+  if (url.includes('/Auth/')) {
+    return response.data as T;
+  }
+  
   return (response.data.dados || response.data) as T;
 };
 

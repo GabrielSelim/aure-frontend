@@ -45,19 +45,19 @@ export enum ModeloNegocio {
 
 export interface Convite {
   id: string;
-  nome: string;
-  email: string;
-  perfil: PerfilUsuario;
-  tipoConvite: TipoConvite;
+  nomeConvidador: string;
+  emailConvidado: string;
+  nomeConvidado: string;
+  funcao: string;
+  tipoConvite: string;
   nomeEmpresa?: string;
   cnpj?: string;
-  tipoEmpresa?: TipoEmpresa;
-  modeloNegocio?: ModeloNegocio;
+  tipoEmpresa?: string;
+  modeloNegocio?: string;
   token: string;
-  expiresEm: string;
-  enviadoEm: string;
-  foiAceito: boolean;
-  aceitoEm?: string;
+  expiraEm: string;
+  criadoEm: string;
+  estaExpirado: boolean;
 }
 
 export enum TipoConvite {

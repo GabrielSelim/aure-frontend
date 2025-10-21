@@ -83,14 +83,13 @@ export default function PaginaConvites() {
   };
 
   const convitesFiltrados = listaConvites.filter(convite =>
-    convite.nome.toLowerCase().includes(termoBusca.toLowerCase()) ||
-    convite.email.toLowerCase().includes(termoBusca.toLowerCase()) ||
+    convite.nomeConvidado?.toLowerCase().includes(termoBusca.toLowerCase()) ||
+    convite.emailConvidado?.toLowerCase().includes(termoBusca.toLowerCase()) ||
     (convite.nomeEmpresa && convite.nomeEmpresa.toLowerCase().includes(termoBusca.toLowerCase()))
   );
 
   const obterStatusConvite = (convite: Convite) => {
-    if (convite.foiAceito) return 'aceito';
-    if (new Date(convite.expiresEm) < new Date()) return 'expirado';
+    if (convite.estaExpirado) return 'expirado';
     return 'pendente';
   };
 
@@ -270,9 +269,9 @@ export default function PaginaConvites() {
                   return (
                     <tr key={convite.id} style={{ borderTop: '1px solid #e5e7eb' }}>
                       <td style={{ padding: '0.75rem', fontWeight: '500' }}>
-                        {convite.nome}
+                        {convite.nomeConvidado}
                       </td>
-                      <td style={{ padding: '0.75rem' }}>{convite.email}</td>
+                      <td style={{ padding: '0.75rem' }}>{convite.emailConvidado}</td>
                       <td style={{ padding: '0.75rem' }}>
                         <span style={{
                           display: 'inline-flex',
@@ -298,17 +297,17 @@ export default function PaginaConvites() {
                           borderRadius: '9999px',
                           fontSize: '0.75rem',
                           fontWeight: '500',
-                          backgroundColor: status === 'aceito' ? '#dcfce7' : status === 'expirado' ? '#fef2f2' : '#fef3c7',
-                          color: status === 'aceito' ? '#166534' : status === 'expirado' ? '#dc2626' : '#92400e'
+                          backgroundColor: status === 'expirado' ? '#fef2f2' : '#fef3c7',
+                          color: status === 'expirado' ? '#dc2626' : '#92400e'
                         }}>
-                          {status === 'aceito' ? 'Aceito' : status === 'expirado' ? 'Expirado' : 'Pendente'}
+                          {status === 'expirado' ? 'Expirado' : 'Pendente'}
                         </span>
                       </td>
                       <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#9ca3af' }}>
-                        {new Date(convite.enviadoEm).toLocaleDateString('pt-BR')}
+                        {new Date(convite.criadoEm).toLocaleDateString('pt-BR')}
                       </td>
                       <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#9ca3af' }}>
-                        {new Date(convite.expiresEm).toLocaleDateString('pt-BR')}
+                        {new Date(convite.expiraEm).toLocaleDateString('pt-BR')}
                       </td>
                       <td style={{ padding: '0.75rem', textAlign: 'right' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>

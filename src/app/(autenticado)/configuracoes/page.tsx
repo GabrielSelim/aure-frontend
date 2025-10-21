@@ -94,7 +94,7 @@ export default function PaginaConfiguracoes() {
     confirmarNovaSenha: ''
   });
 
-  // Carregar dados completos da API
+  // Carregar dados completos do contexto
   const carregarDadosCompletos = async () => {
     if (!usuario) return;
     
@@ -102,14 +102,12 @@ export default function PaginaConfiguracoes() {
       setCarregando(true);
       setErro(null);
       
-      // Buscar dados completos do perfil pela API
-      const perfilCompleto = await servicoAutenticacao.obterPerfil();
-      
+      // Usar dados do contexto de autenticação
       setDadosPerfil({
-        nome: perfilCompleto.nome || '',
-        email: perfilCompleto.email || '',
-        telefone: '', // Campo adicional que será preenchido manualmente
-        cargo: perfilCompleto.perfil || '' // Usar o perfil como cargo base
+        nome: usuario.nome || '',
+        email: usuario.email || '',
+        telefone: '', 
+        cargo: usuario.perfil || ''
       });
       
       // Se tiver empresa, usar dados do contexto (API não possui endpoint específico)
@@ -124,24 +122,7 @@ export default function PaginaConfiguracoes() {
       }
       
     } catch (error: any) {
-      console.error('Erro ao carregar dados:', error);
-      // Em caso de erro, usar dados do contexto
-      setDadosPerfil({
-        nome: usuario.nome || '',
-        email: usuario.email || '',
-        telefone: '',
-        cargo: usuario.perfil || ''
-      });
-      
-      if (empresa) {
-        setDadosEmpresa({
-          nome: empresa.nome || '',
-          cnpj: empresa.cnpj || '',
-          endereco: '',
-          telefone: '',
-          email: ''
-        });
-      }
+      setErro('Erro ao carregar dados do perfil');
     } finally {
       setCarregando(false);
     }

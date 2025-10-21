@@ -12,6 +12,9 @@ export interface RequisicaoLogin {
 export interface RespostaLogin {
   token: string;
   refreshToken: string;
+  tokenAcesso?: string; // Propriedade da API
+  tokenRenovacao?: string; // Propriedade da API
+  expiraEm?: string;
   usuario: import('./entidades').Usuario;
   empresa?: import('./entidades').Empresa;
 }
@@ -27,6 +30,8 @@ export interface RequisicaoRenovarToken {
 export interface RespostaRenovarToken {
   token: string;
   refreshToken: string;
+  tokenAcesso?: string;
+  tokenRenovacao?: string;
 }
 
 // ============ REGISTRO ============

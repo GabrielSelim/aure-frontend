@@ -40,23 +40,20 @@ export const ProvedorAutenticacao: React.FC<ProvedorAutenticacaoProps> = ({ chil
       setCarregando(true);
       
       // Verificar se há dados salvos no localStorage
+      const tokenAtual = localStorage.getItem('authToken');
       const usuarioSalvo = servicoAutenticacao.obterUsuarioSalvo();
-      const empresaSalva = servicoAutenticacao.obterEmpresaSalva();
       
-      if (usuarioSalvo && servicoAutenticacao.estaAutenticado()) {
-        // Verificar se o token ainda é válido
-        const tokenValido = await servicoAutenticacao.verificarToken();
-        
-        if (tokenValido) {
-          setUsuario(usuarioSalvo);
-          setEmpresa(empresaSalva);
-        } else {
-          await sair();
-        }
+      if (tokenAtual && tokenAtual !== 'null' && tokenAtual !== 'undefined' && usuarioSalvo) {
+        setUsuario(usuarioSalvo);
+        const empresaSalva = servicoAutenticacao.obterEmpresaSalva();
+        setEmpresa(empresaSalva);
+      } else {
+        setUsuario(null);
+        setEmpresa(null);
       }
     } catch (error) {
-      console.error('Erro ao inicializar autenticação:', error);
-      await sair();
+      setUsuario(null);
+      setEmpresa(null);
     } finally {
       setCarregando(false);
     }
