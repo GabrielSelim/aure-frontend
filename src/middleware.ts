@@ -7,7 +7,7 @@ export function middleware(request: NextRequest) {
   // Rotas públicas que não precisam de autenticação
   const rotasPublicas = [
     '/entrar',
-    '/registrar',
+    '/registro',
     '/aceitar-convite',
     '/esqueci-senha',
     '/resetar-senha'
