@@ -64,7 +64,9 @@ export const esquemaRegistro = z.object({
     .string()
     .min(1, 'CNPJ é obrigatório')
     .refine(validarCNPJ, 'CNPJ inválido')
-    .transform((cnpj) => cnpj.replace(/[^\d]+/g, '')), // Remove formatação
+    .transform((cnpj) => cnpj.replace(/[^\d]+/g, '')),
+    
+
     
   nomeAdmin: z
     .string()
@@ -90,6 +92,34 @@ export const esquemaRegistro = z.object({
   confirmarSenha: z
     .string()
     .min(1, 'Confirmação de senha é obrigatória'),
+    
+  telefoneCelular: z
+    .string()
+    .optional(),
+    
+  telefoneFixo: z
+    .string()
+    .optional(),
+    
+  rua: z
+    .string()
+    .optional(),
+    
+  cidade: z
+    .string()
+    .optional(),
+    
+  estado: z
+    .string()
+    .optional(),
+    
+  pais: z
+    .string()
+    .optional(),
+    
+  cep: z
+    .string()
+    .optional(),
     
   termosAceitos: z
     .boolean()

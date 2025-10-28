@@ -68,3 +68,23 @@ export const cancelarContrato = async (id: string): Promise<void> => {
 export const excluirContrato = async (id: string): Promise<void> => {
   return await excluirDados<void>(`/Contracts/${id}`);
 };
+
+// Finalizar contrato
+export const finalizarContrato = async (id: string): Promise<void> => {
+  return await atualizarDados<void>(`/Contracts/${id}/finalizar`, {});
+};
+
+// Registrar contrato na blockchain
+export const registrarContrato = async (id: string): Promise<void> => {
+  return await enviarDados<void>(`/Contracts/${id}/registrar`, {});
+};
+
+// Obter certificado do contrato
+export const obterCertificado = async (id: string): Promise<any> => {
+  return await obterDados<any>(`/Contracts/${id}/certificado`);
+};
+
+// Verificar contrato
+export const verificarContrato = async (id: string): Promise<any> => {
+  return await obterDados<any>(`/Contracts/${id}/verificar`);
+};

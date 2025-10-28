@@ -74,3 +74,51 @@ export const baixarPdfNotaFiscal = async (id: string): Promise<Blob> => {
   const response = await fetch(`/api/Invoices/${id}/pdf`);
   return await response.blob();
 };
+
+// Listar notas fiscais (endpoint alternativo)
+export const listarNotasFiscaisAlternativo = async (filtros?: FiltrosConsulta): Promise<NotaFiscal[]> => {
+  const params = new URLSearchParams();
+  
+  if (filtros?.status) params.append('status', filtros.status);
+  if (filtros?.contractId) params.append('contractId', filtros.contractId);
+  
+  const query = params.toString();
+  const url = query ? `/Invoices/listar?${query}` : '/Invoices/listar';
+  
+  return await obterDados<NotaFiscal[]>(url);
+};
+
+// Obter detalhes da nota fiscal
+export const obterDetalhesNotaFiscal = async (id: string): Promise<NotaFiscal> => {
+  return await obterDados<NotaFiscal>(`/Invoices/detalhes/${id}`);
+};
+
+// Criar nota fiscal (endpoint alternativo)
+export const criarNotaFiscalAlternativo = async (dados: RequisicaoCriarNotaFiscal): Promise<NotaFiscal> => {
+  return await enviarDados<NotaFiscal>('/Invoices/criar', dados);
+};
+
+// Obter XML da nota fiscal
+export const obterXmlNotaFiscal = async (id: string): Promise<string> => {
+  return await obterDados<string>(`/Invoices/${id}/xml-nota`);
+};
+
+// Emitir nota fiscal na SEFAZ
+export const emitirNotaFiscalSefaz = async (id: string): Promise<void> => {
+  return await enviarDados<void>(`/Invoices/${id}/emitir-sefaz`, {});
+};
+
+// Cancelar nota fiscal na SEFAZ
+export const cancelarNotaFiscalSefaz = async (id: string, dados: RequisicaoCancelarNotaFiscal): Promise<void> => {
+  return await enviarDados<void>(`/Invoices/${id}/cancelar-sefaz`, dados);
+};
+
+// Obter status da nota fiscal na SEFAZ
+export const obterStatusSefaz = async (id: string): Promise<any> => {
+  return await obterDados<any>(`/Invoices/${id}/status-sefaz`);
+};
+
+// Validar certificado SEFAZ
+export const validarCertificadoSefaz = async (): Promise<any> => {
+  return await obterDados<any>('/Invoices/validar-certificado-sefaz');
+};

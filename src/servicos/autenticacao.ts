@@ -7,7 +7,8 @@ import {
   RespostaLogin, 
   RequisicaoLogout, 
   RequisicaoRenovarToken, 
-  RespostaRenovarToken
+  RespostaRenovarToken,
+  RequisicaoRegistroAdminEmpresa
 } from '../tipos/api';
 import { Usuario } from '../tipos/entidades';
 import { api } from './api';
@@ -177,6 +178,6 @@ export const estaAutenticado = (): boolean => {
 };
 
 // Registrar nova empresa
-export const registrar = async (dados: any): Promise<void> => {
+export const registrar = async (dados: RequisicaoRegistroAdminEmpresa): Promise<void> => {
   return await enviarDados<void>('/Registration/admin-empresa', dados);
 };

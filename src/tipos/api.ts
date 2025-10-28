@@ -39,10 +39,19 @@ export interface RespostaRenovarToken {
 export interface RequisicaoRegistroAdminEmpresa {
   companyName: string;
   companyCnpj: string;
-  adminName: string;
-  adminEmail: string;
+  companyType: import('./entidades').TipoEmpresa;
+  businessModel: import('./entidades').ModeloNegocio;
+  name: string;
+  email: string;
   password: string;
-  confirmPassword: string;
+  telefoneCelular?: string;
+  telefoneFixo?: string;
+  rua?: string;
+  cidade?: string;
+  estado?: string;
+  pais?: string;
+  cep?: string;
+  aceitarTermos: boolean;
 }
 
 export interface RequisicaoConvidarUsuario {
@@ -69,6 +78,16 @@ export interface RequisicaoConvite {
 
 export interface RequisicaoAceitarConvite {
   password: string;
+}
+
+export interface RequisicaoEditarConvite {
+  email?: string;
+  nome?: string;
+}
+
+export interface RequisicaoAtualizarPreferenciasNotificacao {
+  notificacaoEmailContratos: boolean;
+  notificacaoEmailPagamentos: boolean;
 }
 
 // ============ USUÁRIOS ============
@@ -103,6 +122,7 @@ export enum MetodoAssinatura {
 
 export interface RequisicaoAssinarContrato {
   method: MetodoAssinatura;
+  signatureHash?: string;
 }
 
 // ============ PAGAMENTOS ============
@@ -140,15 +160,14 @@ export interface RespostaSefaz {
 
 export interface RequisicaoTokenizarContrato {
   contractId: string;
-  chainId: string;
-  tokenSymbol: string;
-  tokenName: string;
-  metadata: Record<string, any>;
+  tokenAddress?: string;
+  chainId: number;
+  transactionHash?: string;
 }
 
 export interface RequisicaoAtualizarAtivoTokenizado {
-  tokenAddress: string;
-  metadata: Record<string, any>;
+  tokenAddress?: string;
+  transactionHash?: string;
 }
 
 // ============ FILTROS E CONSULTAS ============

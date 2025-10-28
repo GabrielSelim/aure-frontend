@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { Eye, EyeOff, Building2, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, Building2, UserPlus, Phone, MapPin } from 'lucide-react';
 import { esquemaRegistro, type DadosRegistro } from '../../../validacoes/esquema-registro';
 import * as autenticacao from '../../../servicos/autenticacao';
+import { Seletor } from '../../../components/Seletor';
 
 export default function PaginaRegistro() {
   const router = useRouter();
@@ -20,10 +21,11 @@ export default function PaginaRegistro() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     reset
   } = useForm<DadosRegistro>({
-    resolver: zodResolver(esquemaRegistro),
+    resolver: zodResolver(esquemaRegistro)
   });
 
   const aoSubmeter = async (dados: DadosRegistro) => {
@@ -32,7 +34,26 @@ export default function PaginaRegistro() {
       setErro(null);
       setSucesso(null);
 
-      await autenticacao.registrar(dados);
+      // Mapear dados do formulário para formato da API
+      const dadosApi = {
+        companyName: dados.nomeEmpresa,
+        companyCnpj: dados.cnpjEmpresa,
+        companyType: 'Client' as any,
+        businessModel: 'MainCompany' as any,
+        name: dados.nomeAdmin,
+        email: dados.emailAdmin,
+        password: dados.senha,
+        telefoneCelular: dados.telefoneCelular || undefined,
+        telefoneFixo: dados.telefoneFixo || undefined,
+        rua: dados.rua || undefined,
+        cidade: dados.cidade || undefined,
+        estado: dados.estado || undefined,
+        pais: dados.pais || undefined,
+        cep: dados.cep || undefined,
+        aceitarTermos: dados.termosAceitos
+      };
+
+      await autenticacao.registrar(dadosApi);
       
       setSucesso('Registro realizado com sucesso! Você será redirecionado para o login.');
       reset();
@@ -212,6 +233,80 @@ export default function PaginaRegistro() {
               )}
             </div>
 
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <div style={{ flex: 1 }}>
+                <label htmlFor="telefoneCelular" style={{
+                  display: 'block',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  marginBottom: '0.5rem',
+                  color: '#374151'
+                }}>
+                  <Phone style={{ display: 'inline', height: '0.875rem', width: '0.875rem', marginRight: '0.25rem' }} />
+                  Celular
+                </label>
+                <input
+                  id="telefoneCelular"
+                  type="tel"
+                  placeholder="(11) 99999-9999"
+                  {...register('telefoneCelular')}
+                  disabled={carregando}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.875rem',
+                    backgroundColor: carregando ? '#f9fafb' : 'white',
+                    outline: 'none'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                  onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                />
+                {errors.telefoneCelular && (
+                  <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                    {errors.telefoneCelular.message}
+                  </p>
+                )}
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <label htmlFor="telefoneFixo" style={{
+                  display: 'block',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  marginBottom: '0.5rem',
+                  color: '#374151'
+                }}>
+                  <Phone style={{ display: 'inline', height: '0.875rem', width: '0.875rem', marginRight: '0.25rem' }} />
+                  Telefone Fixo
+                </label>
+                <input
+                  id="telefoneFixo"
+                  type="tel"
+                  placeholder="(11) 3333-3333"
+                  {...register('telefoneFixo')}
+                  disabled={carregando}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.875rem',
+                    backgroundColor: carregando ? '#f9fafb' : 'white',
+                    outline: 'none'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                  onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                />
+                {errors.telefoneFixo && (
+                  <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                    {errors.telefoneFixo.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div>
               <label htmlFor="nomeAdmin" style={{
                 display: 'block',
@@ -357,6 +452,206 @@ export default function PaginaRegistro() {
                   {errors.confirmarSenha.message}
                 </p>
               )}
+            </div>
+
+            <div style={{ 
+              border: '1px solid #e5e7eb', 
+              borderRadius: '0.5rem', 
+              padding: '1rem',
+              backgroundColor: '#f9fafb'
+            }}>
+              <h3 style={{
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                marginBottom: '1rem',
+                color: '#374151',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <MapPin style={{ height: '1rem', width: '1rem', marginRight: '0.5rem' }} />
+                Endereço (Opcional)
+              </h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label htmlFor="rua" style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    marginBottom: '0.5rem',
+                    color: '#374151'
+                  }}>
+                    Rua / Endereço
+                  </label>
+                  <input
+                    id="rua"
+                    type="text"
+                    placeholder="Rua, número, complemento"
+                    {...register('rua')}
+                    disabled={carregando}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '0.5rem',
+                      fontSize: '0.875rem',
+                      backgroundColor: carregando ? '#f3f4f6' : 'white',
+                      outline: 'none'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                  />
+                  {errors.rua && (
+                    <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                      {errors.rua.message}
+                    </p>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div style={{ flex: 1 }}>
+                    <label htmlFor="cidade" style={{
+                      display: 'block',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      marginBottom: '0.5rem',
+                      color: '#374151'
+                    }}>
+                      Cidade
+                    </label>
+                    <input
+                      id="cidade"
+                      type="text"
+                      placeholder="Nome da cidade"
+                      {...register('cidade')}
+                      disabled={carregando}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.875rem',
+                        backgroundColor: carregando ? '#f3f4f6' : 'white',
+                        outline: 'none'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                      onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                    />
+                    {errors.cidade && (
+                      <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                        {errors.cidade.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+                    <label htmlFor="estado" style={{
+                      display: 'block',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      marginBottom: '0.5rem',
+                      color: '#374151'
+                    }}>
+                      Estado
+                    </label>
+                    <input
+                      id="estado"
+                      type="text"
+                      placeholder="SP, RJ, MG..."
+                      {...register('estado')}
+                      disabled={carregando}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.875rem',
+                        backgroundColor: carregando ? '#f3f4f6' : 'white',
+                        outline: 'none'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                      onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                    />
+                    {errors.estado && (
+                      <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                        {errors.estado.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div style={{ flex: 1 }}>
+                    <label htmlFor="pais" style={{
+                      display: 'block',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      marginBottom: '0.5rem',
+                      color: '#374151'
+                    }}>
+                      País
+                    </label>
+                    <input
+                      id="pais"
+                      type="text"
+                      placeholder="Brasil, Argentina..."
+                      {...register('pais')}
+                      disabled={carregando}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.875rem',
+                        backgroundColor: carregando ? '#f3f4f6' : 'white',
+                        outline: 'none'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                      onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                    />
+                    {errors.pais && (
+                      <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                        {errors.pais.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+                    <label htmlFor="cep" style={{
+                      display: 'block',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      marginBottom: '0.5rem',
+                      color: '#374151'
+                    }}>
+                      CEP
+                    </label>
+                    <input
+                      id="cep"
+                      type="text"
+                      placeholder="00000-000"
+                      {...register('cep')}
+                      disabled={carregando}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.875rem',
+                        backgroundColor: carregando ? '#f3f4f6' : 'white',
+                        outline: 'none'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                      onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                    />
+                    {errors.cep && (
+                      <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                        {errors.cep.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>

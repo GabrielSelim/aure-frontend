@@ -15,7 +15,7 @@ export interface Usuario {
 
 export enum PerfilUsuario {
   Admin = 'Admin',
-  Funcionario = 'Employee',
+  Empresa = 'Company',
   Fornecedor = 'Provider'
 }
 
@@ -99,6 +99,10 @@ export interface Contrato {
 
 export enum StatusContrato {
   Rascunho = 'Draft',
+  Finalizado = 'Finalized',
+  AssinadoParcialmentePJ = 'PartiallySignedPJ',
+  TotalmenteAssinado = 'FullySigned',
+  RegistradoBlockchain = 'RegisteredOnChain',
   Ativo = 'Active',
   Concluido = 'Completed',
   Cancelado = 'Cancelled'

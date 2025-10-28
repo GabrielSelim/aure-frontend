@@ -7,7 +7,7 @@ import {
   RequisicaoAtualizarUsuario,
   RequisicaoAlterarSenha
 } from '../tipos';
-import { obterDados, atualizarDados, atualizarDadosParcial, excluirDados } from './api';
+import { obterDados, atualizarDados, atualizarDadosParcial, excluirDados, enviarDados } from './api';
 
 // Listar todos os usuários
 export const listarUsuarios = async (): Promise<Usuario[]> => {
@@ -42,4 +42,14 @@ export const desativarUsuario = async (id: string): Promise<void> => {
 // Excluir usuário
 export const excluirUsuario = async (id: string): Promise<void> => {
   return await excluirDados<void>(`/Users/${id}`);
+};
+
+// Atualizar preferências de notificação
+export const atualizarPreferenciasNotificacao = async (dados: import('../tipos').RequisicaoAtualizarPreferenciasNotificacao): Promise<void> => {
+  return await atualizarDados<void>('/Users/preferencias-notificacao', dados);
+};
+
+// Aceitar termos de uso
+export const aceitarTermos = async (): Promise<void> => {
+  return await enviarDados<void>('/Users/aceitar-termos', {});
 };
