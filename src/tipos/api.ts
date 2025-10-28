@@ -10,12 +10,20 @@ export interface RequisicaoLogin {
 }
 
 export interface RespostaLogin {
-  token: string;
-  refreshToken: string;
-  tokenAcesso?: string; // Propriedade da API
-  tokenRenovacao?: string; // Propriedade da API
-  expiraEm?: string;
-  usuario: import('./entidades').Usuario;
+  tokenAcesso: string;
+  tokenRenovacao: string;
+  expiraEm: string;
+  usuario: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    companyId: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  token?: string;
+  refreshToken?: string;
   empresa?: import('./entidades').Empresa;
 }
 
@@ -28,52 +36,89 @@ export interface RequisicaoRenovarToken {
 }
 
 export interface RespostaRenovarToken {
-  token: string;
-  refreshToken: string;
-  tokenAcesso?: string;
-  tokenRenovacao?: string;
+  tokenAcesso: string;
+  tokenRenovacao: string;
+  expiraEm: string;
+  usuario: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    companyId: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  token?: string;
+  refreshToken?: string;
 }
 
 // ============ REGISTRO ============
 
 export interface RequisicaoRegistroAdminEmpresa {
-  companyName: string;
-  companyCnpj: string;
-  companyType: import('./entidades').TipoEmpresa;
-  businessModel: import('./entidades').ModeloNegocio;
-  name: string;
+  nome: string;
   email: string;
-  password: string;
+  senha: string;
   telefoneCelular?: string;
   telefoneFixo?: string;
+  razaoSocial: string;
+  cnpj: string;
   rua?: string;
   cidade?: string;
   estado?: string;
   pais?: string;
   cep?: string;
-  aceitarTermos: boolean;
+  companyName?: string;
+  companyCnpj?: string;
+  name?: string;
+  password?: string;
+  aceitarTermos?: boolean;
 }
 
 export interface RequisicaoConvidarUsuario {
-  name: string;
   email: string;
-  role: import('./entidades').PerfilUsuario;
-  inviteType: import('./entidades').TipoConvite;
-  companyName?: string;
+  nome: string;
+  role: number;
+  inviteType: number;
+  razaoSocial?: string;
   cnpj?: string;
-  companyType?: import('./entidades').TipoEmpresa;
-  businessModel?: import('./entidades').ModeloNegocio;
+  businessModel?: number;
+  companyType?: number;
+  name?: string;
+  companyName?: string;
 }
 
 export interface RequisicaoConvite {
-  name: string;
   email: string;
-  role: import('./entidades').PerfilUsuario;
-  inviteType: import('./entidades').TipoConvite;
-  companyName?: string;
+  nome: string;
+  role: number;
+  inviteType: number;
+  razaoSocial?: string;
   cnpj?: string;
-  companyType?: import('./entidades').TipoEmpresa;
-  businessModel?: import('./entidades').ModeloNegocio;
+  businessModel?: number;
+  companyType?: number;
+  name?: string;
+  companyName?: string;
+}
+
+export interface RespostaConvite {
+  mensagem: string;
+  convite: {
+    id: string;
+    inviterName: string;
+    inviteeEmail: string;
+    inviteeName: string;
+    role: string;
+    companyId: string;
+    invitedByUserId: string;
+    token: string;
+    expiresAt: string;
+    isAccepted: boolean;
+    inviteType: string;
+    businessModel: string | null;
+    companyName: string | null;
+    cnpj: string | null;
+    companyType: string | null;
+  };
 }
 
 export interface RequisicaoAceitarConvite {
@@ -105,23 +150,29 @@ export interface RequisicaoAlterarSenha {
 // ============ CONTRATOS ============
 
 export interface RequisicaoCriarContrato {
-  providerId: string;
-  title: string;
+  employeeId: string;
+  valorMensal: number;
+  dataInicio: string;
+  dataFim?: string;
+  metodoAssinatura: number;
+  termos: string;
+  providerId?: string;
+  title?: string;
   description?: string;
-  valueTotal: number;
+  valueTotal?: number;
   monthlyValue?: number;
-  startDate: string;
+  startDate?: string;
   expirationDate?: string;
 }
 
 export enum MetodoAssinatura {
   Digital = 'Digital',
-  Eletronica = 'Electronic',
+  Electronic = 'Electronic',
   Manual = 'Manual'
 }
 
 export interface RequisicaoAssinarContrato {
-  method: MetodoAssinatura;
+  method?: number;
   signatureHash?: string;
 }
 
@@ -130,7 +181,10 @@ export interface RequisicaoAssinarContrato {
 export interface RequisicaoCriarPagamento {
   contratoId: string;
   valor: number;
-  metodo: import('./entidades').MetodoPagamento;
+  metodo: number;
+  dataPagamento: string;
+  referencia?: string;
+  observacoes?: string;
 }
 
 // ============ NOTAS FISCAIS ============
@@ -190,11 +244,17 @@ export interface FiltrosConsulta {
 // ============ RESPOSTAS PAGINADAS ============
 
 export interface RespostaPaginada<T> {
-  dados: T[];
-  total: number;
-  pagina: number;
-  tamanhoPagina: number;
-  totalPaginas: number;
+  items: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+  dados?: T[];
+  total?: number;
+  pagina?: number;
+  tamanhoPagina?: number;
 }
 
 // ============ RESPOSTA PADRÃO DA API ============

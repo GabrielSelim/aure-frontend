@@ -20,28 +20,14 @@ export const fazerLogin = async (dados: RequisicaoLogin): Promise<RespostaLogin>
     const response = await api.post('/Auth/entrar', dados);
     const responseData = response.data;
     
-    // Tentar diferentes estruturas de resposta
-    let resposta = responseData;
-    
-    // Se a API retorna dados envolvidos em uma propriedade específica
-    if (responseData.dados) {
-      resposta = responseData.dados;
+    if (!responseData.tokenAcesso) {
+      if (responseData.dados && responseData.dados.tokenAcesso) {
+        return responseData.dados as RespostaLogin;
+      }
+      throw new Error(`Resposta de login inválida: tokenAcesso não encontrado. Propriedades disponíveis: ${Object.keys(responseData).join(', ')}`);
     }
     
-    // Verificar se a resposta tem a estrutura esperada e normalizar propriedades
-    if (!resposta.token && resposta.tokenAcesso) {
-      resposta.token = resposta.tokenAcesso;
-    }
-    
-    if (!resposta.refreshToken && resposta.tokenRenovacao) {
-      resposta.refreshToken = resposta.tokenRenovacao;
-    }
-    
-    if (!resposta.token) {
-      throw new Error(`Resposta de login inválida: token não encontrado. Propriedades disponíveis: ${Object.keys(resposta).join(', ')}`);
-    }
-    
-    return resposta as RespostaLogin;
+    return responseData as RespostaLogin;
   } catch (error) {
     throw error;
   }
@@ -79,21 +65,24 @@ export const verificarToken = async (): Promise<boolean> => {
 
 // Salvar dados de autenticação no localStorage
 export const salvarAutenticacao = (resposta: RespostaLogin): void => {
-  if (!resposta.token || resposta.token === 'undefined') {
+  if (!resposta.tokenAcesso || resposta.tokenAcesso === 'undefined') {
     throw new Error('Token de autenticação inválido recebido do servidor');
   }
   
-  localStorage.setItem('authToken', resposta.token);
-  localStorage.setItem('refreshToken', resposta.refreshToken);
-  localStorage.setItem('usuario', JSON.stringify(resposta.usuario));
+  localStorage.setItem('accessToken', resposta.tokenAcesso);
+  if (resposta.tokenRenovacao) {
+    localStorage.setItem('refreshToken', resposta.tokenRenovacao);
+  }
+  localStorage.setItem('user', JSON.stringify(resposta.usuario));
   
   if (resposta.empresa) {
     localStorage.setItem('empresa', JSON.stringify(resposta.empresa));
   }
+  
   if (typeof document !== 'undefined') {
-    document.cookie = `authToken=${resposta.token}; path=/`;
-    if (resposta.refreshToken) {
-      document.cookie = `refreshToken=${resposta.refreshToken}; path=/`;
+    document.cookie = `accessToken=${resposta.tokenAcesso}; path=/; max-age=86400`;
+    if (resposta.tokenRenovacao) {
+      document.cookie = `refreshToken=${resposta.tokenRenovacao}; path=/; max-age=604800`;
     }
   }
 };
@@ -101,7 +90,7 @@ export const salvarAutenticacao = (resposta: RespostaLogin): void => {
 // Obter usuário salvo no localStorage
 export const obterUsuarioSalvo = (): Usuario | null => {
   try {
-    const usuarioJson = localStorage.getItem('usuario');
+    const usuarioJson = localStorage.getItem('user');
     return usuarioJson ? JSON.parse(usuarioJson) : null;
   } catch (error) {
     return null;
@@ -120,14 +109,10 @@ export const obterEmpresaSalva = (): any | null => {
 
 // Limpar dados de autenticação
 export const limparAutenticacao = (): void => {
-  localStorage.removeItem('authToken');
+  localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
-  localStorage.removeItem('usuario');
+  localStorage.removeItem('user');
   localStorage.removeItem('empresa');
-  if (typeof document !== 'undefined') {
-    document.cookie = 'authToken=; Max-Age=0; path=/';
-    document.cookie = 'refreshToken=; Max-Age=0; path=/';
-  }
 };
 
 // Verificar se JWT está expirado
@@ -161,14 +146,13 @@ const tokenEstaExpirado = (token: string): boolean => {
 
 // Verificar se está autenticado
 export const estaAutenticado = (): boolean => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('accessToken');
   const usuario = obterUsuarioSalvo();
   
   if (!token || token.trim() === '' || !usuario) {
     return false;
   }
   
-  // Verificar se token não está expirado
   if (tokenEstaExpirado(token)) {
     limparAutenticacao();
     return false;

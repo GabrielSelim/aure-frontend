@@ -20,7 +20,7 @@ export function middleware(request: NextRequest) {
   
   // Para rotas protegidas, verificar token apenas no cookie/header se disponível
   // Não fazemos verificação complexa aqui para evitar problemas
-  const token = request.cookies.get('authToken')?.value || 
+  const token = request.cookies.get('accessToken')?.value || 
                 request.headers.get('authorization');
   
   // Se não tem token e está tentando acessar rota protegida, redirecionar

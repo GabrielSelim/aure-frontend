@@ -16,7 +16,13 @@ export default function PaginaLogin() {
   const handleLogin = async (dados: DadosLogin) => {
     try {
       setErro(null);
-      await entrar(dados);
+      
+      const requisicao = {
+        email: dados.email,
+        password: dados.password
+      };
+      
+      await entrar(requisicao);
       
       mostrarSucesso('Login realizado com sucesso!');
       router.push('/painel');

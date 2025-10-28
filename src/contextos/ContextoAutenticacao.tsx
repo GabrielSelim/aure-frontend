@@ -39,8 +39,7 @@ export const ProvedorAutenticacao: React.FC<ProvedorAutenticacaoProps> = ({ chil
     try {
       setCarregando(true);
       
-      // Verificar se há dados salvos no localStorage
-      const tokenAtual = localStorage.getItem('authToken');
+      const tokenAtual = localStorage.getItem('accessToken');
       const usuarioSalvo = servicoAutenticacao.obterUsuarioSalvo();
       
       if (tokenAtual && tokenAtual !== 'null' && tokenAtual !== 'undefined' && usuarioSalvo) {
@@ -107,7 +106,7 @@ export const ProvedorAutenticacao: React.FC<ProvedorAutenticacaoProps> = ({ chil
 
   const atualizarUsuario = (usuarioAtualizado: Usuario) => {
     setUsuario(usuarioAtualizado);
-    localStorage.setItem('usuario', JSON.stringify(usuarioAtualizado));
+    localStorage.setItem('user', JSON.stringify(usuarioAtualizado));
   };
 
   const verificarToken = async (): Promise<boolean> => {

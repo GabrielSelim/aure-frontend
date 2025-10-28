@@ -50,7 +50,7 @@ const tokenEstaExpirado = (token: string): boolean => {
 // Interceptador de requisições - adiciona token automaticamente
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
     
     if (token && token !== 'null' && token !== 'undefined' && token.trim() !== '' && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -71,9 +71,9 @@ let renovandoToken = false;
 const limparDadosERedirecionarParaLogin = () => {
   if (!redirecionandoParaLogin) {
     redirecionandoParaLogin = true;
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-    localStorage.removeItem('usuario');
+    localStorage.removeItem('user');
     localStorage.removeItem('empresa');
     
     if (typeof window !== 'undefined') {
@@ -121,19 +121,16 @@ api.interceptors.response.use(
           
           const responseData = response.data.dados || response.data;
           
-          // Normalizar propriedades da resposta
-          const novoToken = responseData.token || responseData.tokenAcesso;
-          const novoRefreshToken = responseData.refreshToken || responseData.tokenRenovacao;
+          const novoToken = responseData.tokenAcesso;
+          const novoRefreshToken = responseData.tokenRenovacao;
           
           if (!novoToken) {
             throw new Error('Token não recebido na renovação');
           }
           
-          localStorage.setItem('authToken', novoToken);
-          localStorage.setItem('refreshToken', novoRefreshToken);
-          if (typeof document !== 'undefined') {
-            document.cookie = `authToken=${novoToken}; path=/`;
-            if (novoRefreshToken) document.cookie = `refreshToken=${novoRefreshToken}; path=/`;
+          localStorage.setItem('accessToken', novoToken);
+          if (novoRefreshToken) {
+            localStorage.setItem('refreshToken', novoRefreshToken);
           }
           
           originalRequest.headers.Authorization = `Bearer ${novoToken}`;
@@ -228,18 +225,16 @@ export const tratarErroApi = (error: any) => {
 
 // Função para verificar se o usuário está autenticado
 export const estaAutenticado = (): boolean => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('accessToken');
   return !!token;
 };
 
-// Função para obter o token atual
 export const obterToken = (): string | null => {
-  return localStorage.getItem('authToken');
+  return localStorage.getItem('accessToken');
 };
 
-// Função para limpar dados de autenticação
 export const limparAutenticacao = (): void => {
-  localStorage.removeItem('authToken');
+  localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
-  localStorage.removeItem('usuario');
+  localStorage.removeItem('user');
 };
