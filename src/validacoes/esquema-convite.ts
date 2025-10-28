@@ -87,7 +87,7 @@ export const esquemaConvite = z.object({
     .transform((val) => val || undefined),
 }).superRefine((data, ctx) => {
   // Se o tipo de convite é PJ Contratado, campos da empresa são obrigatórios
-  if (data.tipoConvite === TipoConvite.PJContratado) {
+  if (data.tipoConvite === TipoConvite.ContractedPJ) {
     if (!data.nomeEmpresa) {
       ctx.addIssue({
         code: 'custom',
@@ -132,33 +132,15 @@ export type DadosConvite = z.infer<typeof esquemaConvite>;
 
 // Schema para aceitar convite
 export const esquemaAceitarConvite = z.object({
-  token: z
-    .string()
-    .min(1, 'Token é obrigatório'),
-    
-  email: z
-    .string()
-    .min(1, 'Email é obrigatório')
-    .email('Email deve ser válido'),
-    
-  nome: z
-    .string()
-    .min(1, 'Nome é obrigatório')
-    .min(2, 'Nome deve ter pelo menos 2 caracteres')
-    .max(255, 'Nome deve ter no máximo 255 caracteres')
-    .trim(),
-    
-  cpf: z
-    .string()
-    .min(1, 'CPF é obrigatório')
-    .length(11, 'CPF deve ter 11 dígitos')
-    .regex(/^\d{11}$/, 'CPF deve conter apenas números'),
-    
   senha: z
     .string()
     .min(1, 'Senha é obrigatória')
     .min(8, 'Senha deve ter pelo menos 8 caracteres')
-    .max(100, 'Senha deve ter no máximo 100 caracteres'),
+    .max(100, 'Senha deve ter no máximo 100 caracteres')
+    .regex(/[A-Z]/, 'Senha deve conter pelo menos uma letra maiúscula')
+    .regex(/[a-z]/, 'Senha deve conter pelo menos uma letra minúscula')
+    .regex(/[0-9]/, 'Senha deve conter pelo menos um número')
+    .regex(/[^A-Za-z0-9]/, 'Senha deve conter pelo menos um caractere especial'),
     
   confirmarSenha: z
     .string()

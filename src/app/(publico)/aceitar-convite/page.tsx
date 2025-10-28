@@ -21,12 +21,10 @@ function ConteudoAceitarConvite() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [carregando, setCarregando] = useState(false);
-  const [carregandoConvite, setCarregandoConvite] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
-  const [dadosConvite, setDadosConvite] = useState<any>(null);
 
   const token = searchParams.get('token');
 
@@ -34,42 +32,23 @@ function ConteudoAceitarConvite() {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
     reset
   } = useForm<DadosAceitarConvite>({
     resolver: zodResolver(esquemaAceitarConvite),
   });
 
-  useEffect(() => {
+  const aoSubmeter = async (dados: DadosAceitarConvite) => {
     if (!token) {
       setErro('Token de convite não fornecido');
-      setCarregandoConvite(false);
       return;
     }
 
-    const verificarConvite = async () => {
-      try {
-        const dados = await obterDados<any>(`/Registration/validar-convite/${token}`);
-        setDadosConvite(dados);
-        setValue('token', token);
-        setValue('email', dados.inviteeEmail || dados.email);
-      } catch (error: any) {
-        setErro(error.message || 'Convite inválido ou expirado');
-      } finally {
-        setCarregandoConvite(false);
-      }
-    };
-
-    verificarConvite();
-  }, [token, setValue]);
-
-  const aoSubmeter = async (dados: DadosAceitarConvite) => {
     try {
       setCarregando(true);
       setErro(null);
       setSucesso(null);
 
-      await convites.aceitarConvite(token!, { password: dados.senha });
+      await convites.aceitarConvite(token, { password: dados.senha });
       
       setSucesso('Convite aceito com sucesso! Você será redirecionado para o login.');
       reset();
@@ -78,21 +57,13 @@ function ConteudoAceitarConvite() {
         router.push('/entrar');
       }, 2000);
     } catch (error: any) {
-      setErro(error.message || 'Erro ao aceitar convite');
+      setErro(error.message || 'Erro ao aceitar convite. Verifique se o convite ainda é válido.');
     } finally {
       setCarregando(false);
     }
   };
 
-  if (carregandoConvite) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Carregando texto="Verificando convite..." />
-      </div>
-    );
-  }
-
-  if (!token || erro) {
+  if (!token) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-linear-to-br from-blue-50 to-indigo-100">
         <Card className="w-full max-w-md">
@@ -135,60 +106,23 @@ function ConteudoAceitarConvite() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {dadosConvite && (
-            <div className="mb-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-800">
-                <strong>Empresa:</strong> {dadosConvite.nomeEmpresa}
-              </p>
-              <p className="text-sm text-blue-800">
-                <strong>Perfil:</strong> {dadosConvite.perfil}
-              </p>
-            </div>
-          )}
+          <div className="mb-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-800 text-center font-medium mb-2">
+              Defina uma senha para completar seu cadastro
+            </p>
+            <p className="text-xs text-blue-600 text-left">
+              A senha deve conter:
+            </p>
+            <ul className="text-xs text-blue-600 mt-1 ml-4 list-disc">
+              <li>Mínimo 8 caracteres</li>
+              <li>Pelo menos 1 letra maiúscula</li>
+              <li>Pelo menos 1 letra minúscula</li>
+              <li>Pelo menos 1 número</li>
+              <li>Pelo menos 1 caractere especial</li>
+            </ul>
+          </div>
 
           <form onSubmit={handleSubmit(aoSubmeter)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                {...register('email')}
-                disabled={true}
-                className="bg-gray-50"
-              />
-              {errors.email && (
-                <p className="text-sm text-red-600">{errors.email.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="nome">Nome Completo</Label>
-              <Input
-                id="nome"
-                type="text"
-                placeholder="Digite seu nome completo"
-                {...register('nome')}
-                disabled={carregando}
-              />
-              {errors.nome && (
-                <p className="text-sm text-red-600">{errors.nome.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cpf">CPF</Label>
-              <Input
-                id="cpf"
-                type="text"
-                placeholder="000.000.000-00"
-                {...register('cpf')}
-                disabled={carregando}
-              />
-              {errors.cpf && (
-                <p className="text-sm text-red-600">{errors.cpf.message}</p>
-              )}
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="senha">Senha</Label>
               <div className="relative">
