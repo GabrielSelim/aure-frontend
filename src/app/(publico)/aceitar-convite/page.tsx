@@ -14,7 +14,8 @@ import { Carregando } from '../../../componentes/comum/Carregando';
 import { MensagemErro } from '../../../componentes/comum/MensagemErro';
 import { MensagemSucesso } from '../../../componentes/comum/MensagemSucesso';
 import { esquemaAceitarConvite, type DadosAceitarConvite } from '../../../validacoes/esquema-convite';
-import * as relacionamentos from '../../../servicos/relacionamentos';
+import * as convites from '../../../servicos/convites';
+import { obterDados } from '../../../servicos/api';
 
 function ConteudoAceitarConvite() {
   const router = useRouter();
@@ -48,10 +49,10 @@ function ConteudoAceitarConvite() {
 
     const verificarConvite = async () => {
       try {
-        const dados = await relacionamentos.obterConvitePorToken(token);
+        const dados = await obterDados<any>(`/Registration/validar-convite/${token}`);
         setDadosConvite(dados);
         setValue('token', token);
-        setValue('email', dados.email);
+        setValue('email', dados.inviteeEmail || dados.email);
       } catch (error: any) {
         setErro(error.message || 'Convite inválido ou expirado');
       } finally {
@@ -68,7 +69,7 @@ function ConteudoAceitarConvite() {
       setErro(null);
       setSucesso(null);
 
-      await relacionamentos.aceitarConvite(dados);
+      await convites.aceitarConvite(token!, { password: dados.senha });
       
       setSucesso('Convite aceito com sucesso! Você será redirecionado para o login.');
       reset();

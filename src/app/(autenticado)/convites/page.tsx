@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Convite } from '../../../tipos/entidades';
 import * as convites from '../../../servicos/convites';
+import { FormularioNovoConvite } from '../../../componentes/convites/FormularioNovoConvite';
 
 export default function PaginaConvites() {
   const [listaConvites, setListaConvites] = useState<Convite[]>([]);
@@ -44,9 +45,9 @@ export default function PaginaConvites() {
       setErro(null);
       setSucesso(null);
 
-      // Funcionalidade de reenvio não disponível na API atual
-      // TODO: Implementar quando API fornecer endpoint
-      setSucesso('Funcionalidade de reenvio será implementada em breve');
+      await convites.reenviarConvite(id);
+      setSucesso('Convite reenviado com sucesso');
+      await carregarConvites();
       
     } catch (error: any) {
       setErro(error.message || 'Erro ao reenviar convite');
@@ -139,22 +140,7 @@ export default function PaginaConvites() {
             Gerencie os convites enviados
           </p>
         </div>
-        <button style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          padding: '0.5rem 1rem',
-          backgroundColor: '#2563eb',
-          color: 'white',
-          border: 'none',
-          borderRadius: '0.375rem',
-          fontSize: '0.875rem',
-          cursor: 'pointer',
-          fontWeight: '500'
-        }}>
-          <Plus style={{ height: '1rem', width: '1rem' }} />
-          Novo Convite
-        </button>
+        <FormularioNovoConvite aoSucesso={carregarConvites} />
       </div>
 
       {erro && (
@@ -283,7 +269,7 @@ export default function PaginaConvites() {
                           backgroundColor: '#dbeafe',
                           color: '#1e40af'
                         }}>
-                          {obterTextoTipoConvite(convite.tipoConvite)}
+                          {obterTextoTipoConvite(convite.tipoConvite || convite.inviteType || '')}
                         </span>
                       </td>
                       <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#9ca3af' }}>
@@ -304,10 +290,10 @@ export default function PaginaConvites() {
                         </span>
                       </td>
                       <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#9ca3af' }}>
-                        {new Date(convite.criadoEm).toLocaleDateString('pt-BR')}
+                        {convite.criadoEm ? new Date(convite.criadoEm).toLocaleDateString('pt-BR') : '-'}
                       </td>
                       <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#9ca3af' }}>
-                        {new Date(convite.expiraEm).toLocaleDateString('pt-BR')}
+                        {convite.expiraEm ? new Date(convite.expiraEm).toLocaleDateString('pt-BR') : (convite.expiresAt ? new Date(convite.expiresAt).toLocaleDateString('pt-BR') : '-')}
                       </td>
                       <td style={{ padding: '0.75rem', textAlign: 'right' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>

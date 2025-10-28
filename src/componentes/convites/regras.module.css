@@ -1,0 +1,65 @@
+.regrasTipo {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+.regrasTipoTitulo {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.regrasTipoLista {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.regraItem {
+  font-size: 0.875rem;
+  color: #6b7280;
+  padding-left: 1.25rem;
+  position: relative;
+}
+
+.regraItem::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #059669;
+  font-weight: bold;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badgeInterno {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.badgeContratado {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.badgeExterno {
+  background-color: #fef3c7;
+  color: #92400e;
+}
