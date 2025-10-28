@@ -7,13 +7,19 @@ import {
   RequisicaoCriarNotaFiscal,
   RequisicaoCancelarNotaFiscal,
   RespostaSefaz,
-  FiltrosConsulta
+  FiltrosConsulta,
+  RespostaPaginada
 } from '../tipos';
 import { obterDados, enviarDados, atualizarDados } from './api';
 
-// Listar notas fiscais
-export const listarNotasFiscais = async (filtros?: FiltrosConsulta): Promise<NotaFiscal[]> => {
+export const listarNotasFiscais = async (
+  pageNumber: number = 1,
+  pageSize: number = 10,
+  filtros?: FiltrosConsulta
+): Promise<RespostaPaginada<NotaFiscal>> => {
   const params = new URLSearchParams();
+  params.append('pageNumber', pageNumber.toString());
+  params.append('pageSize', pageSize.toString());
   
   if (filtros?.status) {
     params.append('status', filtros.status);
@@ -23,28 +29,7 @@ export const listarNotasFiscais = async (filtros?: FiltrosConsulta): Promise<Not
     params.append('contractId', filtros.contractId);
   }
   
-  const query = params.toString();
-  const url = query ? `/Invoices/listar?${query}` : '/Invoices/listar';
-  
-  return await obterDados<NotaFiscal[]>(url);
-};
-
-// Listar notas fiscais (endpoint alternativo)
-export const listarNotasFiscaisSimples = async (filtros?: FiltrosConsulta): Promise<NotaFiscal[]> => {
-  const params = new URLSearchParams();
-  
-  if (filtros?.status) {
-    params.append('status', filtros.status);
-  }
-  
-  if (filtros?.contractId) {
-    params.append('contractId', filtros.contractId);
-  }
-  
-  const query = params.toString();
-  const url = query ? `/Invoices?${query}` : '/Invoices';
-  
-  return await obterDados<NotaFiscal[]>(url);
+  return await obterDados<RespostaPaginada<NotaFiscal>>(`/Invoices?${params.toString()}`);
 };
 
 // Criar nota fiscal

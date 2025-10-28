@@ -6,22 +6,25 @@ import {
   Contrato,
   RequisicaoCriarContrato,
   RequisicaoAssinarContrato,
-  FiltrosConsulta
+  FiltrosConsulta,
+  RespostaPaginada
 } from '../tipos';
 import { obterDados, enviarDados, atualizarDados, atualizarDadosParcial, excluirDados } from './api';
 
-// Listar contratos
-export const listarContratos = async (filtros?: FiltrosConsulta): Promise<Contrato[]> => {
+export const listarContratos = async (
+  pageNumber: number = 1,
+  pageSize: number = 10,
+  filtros?: FiltrosConsulta
+): Promise<RespostaPaginada<Contrato>> => {
   const params = new URLSearchParams();
+  params.append('pageNumber', pageNumber.toString());
+  params.append('pageSize', pageSize.toString());
   
   if (filtros?.status) {
     params.append('status', filtros.status);
   }
   
-  const query = params.toString();
-  const url = query ? `/Contracts?${query}` : '/Contracts';
-  
-  return await obterDados<Contrato[]>(url);
+  return await obterDados<RespostaPaginada<Contrato>>(`/Contracts?${params.toString()}`);
 };
 
 // Criar contrato
@@ -44,9 +47,8 @@ export const obterContrato = async (id: string): Promise<Contrato> => {
   return await obterDados<Contrato>(`/Contracts/${id}`);
 };
 
-// Assinar contrato
-export const assinarContrato = async (id: string, dados: RequisicaoAssinarContrato): Promise<void> => {
-  return await enviarDados<void>(`/Contracts/${id}/assinar`, dados);
+export const assinarContrato = async (id: string, dados: RequisicaoAssinarContrato): Promise<Contrato> => {
+  return await enviarDados<Contrato>(`/Contracts/${id}/assinar`, dados);
 };
 
 // Atualizar contrato

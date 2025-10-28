@@ -4,22 +4,25 @@
 
 import { 
   RelacionamentoEmpresa,
-  FiltrosConsulta
+  FiltrosConsulta,
+  RespostaPaginada
 } from '../tipos';
-import { obterDados, atualizarDados, excluirDados, api } from './api';
+import { obterDados, atualizarDados } from './api';
 
-// Listar relacionamentos
-export const listarRelacionamentos = async (filtros?: FiltrosConsulta): Promise<RelacionamentoEmpresa[]> => {
+export const listarRelacionamentos = async (
+  pageNumber: number = 1,
+  pageSize: number = 10,
+  filtros?: FiltrosConsulta
+): Promise<RespostaPaginada<RelacionamentoEmpresa>> => {
   const params = new URLSearchParams();
+  params.append('pageNumber', pageNumber.toString());
+  params.append('pageSize', pageSize.toString());
   
   if (filtros?.status) {
     params.append('status', filtros.status);
   }
   
-  const query = params.toString();
-  const url = query ? `/CompanyRelationships?${query}` : '/CompanyRelationships';
-  
-  return await obterDados<RelacionamentoEmpresa[]>(url);
+  return await obterDados<RespostaPaginada<RelacionamentoEmpresa>>(`/CompanyRelationships?${params.toString()}`);
 };
 
 // Obter compromissos mensais
@@ -32,47 +35,52 @@ export const obterReceitasMensais = async (): Promise<any[]> => {
   return await obterDados<any[]>('/CompanyRelationships/receitas-mensais');
 };
 
-// Listar relacionamentos como cliente
-export const listarComoCliente = async (): Promise<RelacionamentoEmpresa[]> => {
-  return await obterDados<RelacionamentoEmpresa[]>('/CompanyRelationships/como-cliente');
+export const listarComoCliente = async (
+  pageNumber: number = 1,
+  pageSize: number = 10
+): Promise<RespostaPaginada<RelacionamentoEmpresa>> => {
+  const params = new URLSearchParams();
+  params.append('pageNumber', pageNumber.toString());
+  params.append('pageSize', pageSize.toString());
+  
+  return await obterDados<RespostaPaginada<RelacionamentoEmpresa>>(`/CompanyRelationships/como-cliente?${params.toString()}`);
 };
 
-// Listar relacionamentos como fornecedor
-export const listarComoFornecedor = async (): Promise<RelacionamentoEmpresa[]> => {
-  return await obterDados<RelacionamentoEmpresa[]>('/CompanyRelationships/como-fornecedor');
+export const listarComoFornecedor = async (
+  pageNumber: number = 1,
+  pageSize: number = 10
+): Promise<RespostaPaginada<RelacionamentoEmpresa>> => {
+  const params = new URLSearchParams();
+  params.append('pageNumber', pageNumber.toString());
+  params.append('pageSize', pageSize.toString());
+  
+  return await obterDados<RespostaPaginada<RelacionamentoEmpresa>>(`/CompanyRelationships/como-fornecedor?${params.toString()}`);
 };
 
-// Ativar relacionamento
-export const ativarRelacionamento = async (relationshipId: string): Promise<void> => {
-  return await atualizarDados<void>(`/CompanyRelationships/${relationshipId}/ativar`, {});
+export const ativarRelacionamento = async (relationshipId: string): Promise<RelacionamentoEmpresa> => {
+  return await atualizarDados<RelacionamentoEmpresa>(`/CompanyRelationships/${relationshipId}/ativar`, {});
 };
 
-// Desativar relacionamento
-export const desativarRelacionamento = async (relationshipId: string): Promise<void> => {
-  return await atualizarDados<void>(`/CompanyRelationships/${relationshipId}/desativar`, {});
+export const desativarRelacionamento = async (relationshipId: string): Promise<RelacionamentoEmpresa> => {
+  return await atualizarDados<RelacionamentoEmpresa>(`/CompanyRelationships/${relationshipId}/desativar`, {});
 };
 
-// Obter usuários de um relacionamento
-export const obterUsuariosRelacionamento = async (relationshipId: string): Promise<any[]> => {
-  return await obterDados<any[]>(`/CompanyRelationships/${relationshipId}/usuarios`);
-};
+interface UsuarioRelacionamento {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+}
 
-// Obter convite por token
-export const obterConvitePorToken = async (token: string): Promise<any> => {
-  try {
-    const resposta = await api.get(`/convites/validar/${token}`);
-    return resposta.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.mensagem || 'Convite não encontrado ou expirado');
-  }
-};
-
-// Aceitar convite de usuário
-export const aceitarConvite = async (dados: any): Promise<any> => {
-  try {
-    const resposta = await api.post('/convites/aceitar', dados);
-    return resposta.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.mensagem || 'Erro ao aceitar convite');
-  }
+export const obterUsuariosRelacionamento = async (
+  relationshipId: string,
+  pageNumber: number = 1,
+  pageSize: number = 10
+): Promise<RespostaPaginada<UsuarioRelacionamento>> => {
+  const params = new URLSearchParams();
+  params.append('pageNumber', pageNumber.toString());
+  params.append('pageSize', pageSize.toString());
+  
+  return await obterDados<RespostaPaginada<UsuarioRelacionamento>>(`/CompanyRelationships/${relationshipId}/usuarios?${params.toString()}`);
 };

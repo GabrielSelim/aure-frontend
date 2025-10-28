@@ -57,44 +57,42 @@ export default function PaginaPainel() {
       };
 
       try {
-        // Carregar dados básicos primeiro
         const [usuariosRel, contratosList] = await Promise.allSettled([
-          relacionamentos.listarRelacionamentos(),
-          contratos.listarContratos()
+          relacionamentos.listarRelacionamentos(1, 10),
+          contratos.listarContratos(1, 10)
         ]);
 
-        const usuariosDados = usuariosRel.status === 'fulfilled' ? usuariosRel.value : [];
-        const contratosDados = contratosList.status === 'fulfilled' ? contratosList.value : [];
+        const usuariosDados = usuariosRel.status === 'fulfilled' ? usuariosRel.value : null;
+        const contratosDados = contratosList.status === 'fulfilled' ? contratosList.value : null;
 
-        // Carregar dados financeiros separadamente se os básicos funcionaram
-        let pagamentosList: any = [];
-        let notasList: any = [];
+        let pagamentosList: any = null;
+        let notasList: any = null;
         let receitas: any = [];
         let compromissos: any = [];
 
         if (usuariosRel.status === 'fulfilled' || contratosList.status === 'fulfilled') {
           const [pagamentosRes, notasRes, receitasRes, compromissosRes] = await Promise.allSettled([
-            pagamentos.listarPagamentos(),
-            notasFiscais.listarNotasFiscais(),
+            pagamentos.listarPagamentos(1, 10),
+            notasFiscais.listarNotasFiscais(1, 10),
             relacionamentos.obterReceitasMensais(),
             relacionamentos.obterCompromissosMensais()
           ]);
 
-          pagamentosList = pagamentosRes.status === 'fulfilled' ? pagamentosRes.value : [];
-          notasList = notasRes.status === 'fulfilled' ? notasRes.value : [];
+          pagamentosList = pagamentosRes.status === 'fulfilled' ? pagamentosRes.value : null;
+          notasList = notasRes.status === 'fulfilled' ? notasRes.value : null;
           receitas = receitasRes.status === 'fulfilled' ? receitasRes.value : [];
           compromissos = compromissosRes.status === 'fulfilled' ? compromissosRes.value : [];
         }
 
         const receitaTotal = Array.isArray(receitas) ? 
-          receitas.reduce((acc: number, item: any) => acc + (item?.valor || 0), 0) : 0;
+          receitas.reduce((acc: number, item: any) => acc + (item?.totalAmount || item?.valor || 0), 0) : 0;
         const compromissosTotal = Array.isArray(compromissos) ? compromissos.length : 0;
 
         setEstatisticas({
-          totalUsuarios: Array.isArray(usuariosDados) ? usuariosDados.length : 0,
-          totalContratos: Array.isArray(contratosDados) ? contratosDados.length : 0,
-          totalPagamentos: Array.isArray(pagamentosList) ? pagamentosList.length : 0,
-          totalNotasFiscais: Array.isArray(notasList) ? notasList.length : 0,
+          totalUsuarios: usuariosDados?.totalCount || 0,
+          totalContratos: contratosDados?.totalCount || 0,
+          totalPagamentos: pagamentosList?.totalCount || 0,
+          totalNotasFiscais: notasList?.totalCount || 0,
           receitaMensal: receitaTotal,
           compromissosMes: compromissosTotal
         });

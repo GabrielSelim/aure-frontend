@@ -5,13 +5,19 @@
 import { 
   Pagamento,
   RequisicaoCriarPagamento,
-  FiltrosConsulta
+  FiltrosConsulta,
+  RespostaPaginada
 } from '../tipos';
 import { obterDados, enviarDados, atualizarDados } from './api';
 
-// Listar pagamentos
-export const listarPagamentos = async (filtros?: FiltrosConsulta): Promise<Pagamento[]> => {
+export const listarPagamentos = async (
+  pageNumber: number = 1,
+  pageSize: number = 10,
+  filtros?: FiltrosConsulta
+): Promise<RespostaPaginada<Pagamento>> => {
   const params = new URLSearchParams();
+  params.append('pageNumber', pageNumber.toString());
+  params.append('pageSize', pageSize.toString());
   
   if (filtros?.status) {
     params.append('status', filtros.status);
@@ -21,10 +27,7 @@ export const listarPagamentos = async (filtros?: FiltrosConsulta): Promise<Pagam
     params.append('contractId', filtros.contractId);
   }
   
-  const query = params.toString();
-  const url = query ? `/Payments?${query}` : '/Payments';
-  
-  return await obterDados<Pagamento[]>(url);
+  return await obterDados<RespostaPaginada<Pagamento>>(`/Payments?${params.toString()}`);
 };
 
 // Criar pagamento
@@ -42,12 +45,10 @@ export const obterResumoFinanceiro = async (): Promise<any> => {
   return await obterDados<any>('/Payments/resumo-financeiro');
 };
 
-// Processar pagamento
-export const processarPagamento = async (id: string): Promise<void> => {
-  return await atualizarDados<void>(`/Payments/${id}/processar`, {});
+export const processarPagamento = async (id: string): Promise<Pagamento> => {
+  return await atualizarDados<Pagamento>(`/Payments/${id}/processar`, {});
 };
 
-// Cancelar pagamento
-export const cancelarPagamento = async (id: string): Promise<void> => {
-  return await atualizarDados<void>(`/Payments/${id}/cancelar`, {});
+export const cancelarPagamento = async (id: string): Promise<Pagamento> => {
+  return await atualizarDados<Pagamento>(`/Payments/${id}/cancelar`, {});
 };
