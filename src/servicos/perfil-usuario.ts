@@ -20,7 +20,7 @@ export const obterPerfilCompleto = async (): Promise<UserProfileResponse> => {
 };
 
 export const atualizarPerfilCompleto = async (dados: UpdateFullProfileRequest): Promise<UserProfileResponse> => {
-  return await atualizarDados<UserProfileResponse>('/UserProfile/perfil', dados);
+  return await atualizarDados<UserProfileResponse>('/UserProfile/perfil-completo', dados);
 };
 
 export const uploadAvatar = async (arquivo: File): Promise<AvatarUploadResponse> => {
