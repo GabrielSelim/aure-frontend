@@ -5,16 +5,18 @@
 import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { RespostaApi } from '../tipos';
 
-// URL base da API
-export const API_BASE_URL = 'http://localhost:5203/api';
+const isClient = typeof window !== 'undefined';
+const API_REMOTE_URL = 'https://aureapi.gabrielsanztech.com.br/api';
+const API_LOCAL_PROXY = '/api';
 
-// Instância do Axios
+export const API_BASE_URL = isClient ? API_LOCAL_PROXY : (process.env.NEXT_PUBLIC_API_URL || API_REMOTE_URL);
+
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 segundos
+  timeout: 30000,
 });
 
 const decodeBase64Url = (str: string): string => {

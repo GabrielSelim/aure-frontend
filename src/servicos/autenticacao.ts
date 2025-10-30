@@ -20,15 +20,45 @@ export const fazerLogin = async (dados: RequisicaoLogin): Promise<RespostaLogin>
     const response = await api.post('/Auth/entrar', dados);
     const responseData = response.data;
     
-    if (!responseData.tokenAcesso) {
-      if (responseData.dados && responseData.dados.tokenAcesso) {
-        return responseData.dados as RespostaLogin;
-      }
-      throw new Error(`Resposta de login inválida: tokenAcesso não encontrado. Propriedades disponíveis: ${Object.keys(responseData).join(', ')}`);
+    console.log('Resposta do login:', responseData);
+    console.log('Estrutura da resposta:', Object.keys(responseData));
+    
+    let loginData = responseData;
+    
+    if (responseData.dados) {
+      console.log('Usando dados do envelope');
+      loginData = responseData.dados;
     }
     
-    return responseData as RespostaLogin;
-  } catch (error) {
+    const token = loginData.tokenAcesso || loginData.token || loginData.accessToken;
+    const refreshToken = loginData.tokenRenovacao || loginData.refreshToken;
+    
+    if (!token) {
+      console.error('Token não encontrado na resposta:', responseData);
+      throw new Error(`Resposta de login inválida: token não encontrado. Propriedades disponíveis: ${Object.keys(loginData).join(', ')}`);
+    }
+    
+    console.log('Token encontrado:', token ? 'SIM' : 'NÃO');
+    console.log('RefreshToken encontrado:', refreshToken ? 'SIM' : 'NÃO');
+    
+    const respostaFormatada: RespostaLogin = {
+      tokenAcesso: token,
+      tokenRenovacao: refreshToken || '',
+      expiraEm: loginData.expiraEm || loginData.expiresAt || '',
+      usuario: loginData.usuario || loginData.user || {},
+      token: token,
+      refreshToken: refreshToken,
+      empresa: loginData.empresa || loginData.company
+    };
+    
+    console.log('Resposta formatada:', respostaFormatada);
+    return respostaFormatada;
+  } catch (error: any) {
+    console.error('Erro no login:', error);
+    if (error.response) {
+      console.error('Status:', error.response.status);
+      console.error('Dados da resposta:', error.response.data);
+    }
     throw error;
   }
 };

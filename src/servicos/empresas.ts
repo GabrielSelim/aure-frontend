@@ -3,19 +3,24 @@
 // ========================================
 
 import { 
-  Empresa
+  Empresa,
+  CompanyInfoResponse,
+  UpdateCompanyRequest
 } from '../tipos';
 import { obterDados, atualizarDados } from './api';
 
-// NOTA: Não há endpoints específicos para empresas na API documentada
-// Os dados da empresa vêm junto com o login e perfil do usuário
+export const obterEmpresaPai = async (): Promise<CompanyInfoResponse> => {
+  return await obterDados<CompanyInfoResponse>('/Companies/empresa-pai');
+};
 
-// Função placeholder para manter compatibilidade
+export const atualizarEmpresaPai = async (dados: UpdateCompanyRequest): Promise<CompanyInfoResponse> => {
+  return await atualizarDados<CompanyInfoResponse>('/Companies/empresa-pai', dados);
+};
+
 export const obterEmpresaAtual = async (): Promise<Empresa> => {
   throw new Error('Endpoint não disponível na API atual. Dados da empresa vêm do contexto de autenticação.');
 };
 
-// Função placeholder para manter compatibilidade  
 export const atualizarEmpresa = async (dados: Partial<Empresa>): Promise<Empresa> => {
   throw new Error('Endpoint não disponível na API atual. Atualizações de empresa devem ser feitas através de outros meios.');
 };

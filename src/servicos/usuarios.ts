@@ -5,51 +5,86 @@
 import { 
   Usuario,
   RequisicaoAtualizarUsuario,
-  RequisicaoAlterarSenha
+  RequisicaoAlterarSenha,
+  EmployeeListItemResponse,
+  BirthdayItem,
+  RespostaPaginada
 } from '../tipos';
-import { obterDados, atualizarDados, atualizarDadosParcial, excluirDados, enviarDados } from './api';
+import { obterDados, atualizarDados, atualizarDadosParcial, excluirDados, api } from './api';
 
-// Listar todos os usuários
 export const listarUsuarios = async (): Promise<Usuario[]> => {
   return await obterDados<Usuario[]>('/Users');
 };
 
-// Obter usuário por ID
 export const obterUsuario = async (id: string): Promise<Usuario> => {
   return await obterDados<Usuario>(`/Users/${id}`);
 };
 
-// Atualizar perfil do usuário
-export const atualizarPerfil = async (dados: RequisicaoAtualizarUsuario): Promise<Usuario> => {
-  return await atualizarDados<Usuario>('/Users/perfil', dados);
+export const atualizarPerfil = async (dados: RequisicaoAtualizarUsuario): Promise<void> => {
+  return await atualizarDados<void>('/Users/perfil', dados);
 };
 
-// Alterar senha do usuário
 export const alterarSenha = async (dados: RequisicaoAlterarSenha): Promise<void> => {
   return await atualizarDadosParcial<void>('/Users/senha', dados);
 };
 
-// Ativar usuário
+export const listarFuncionarios = async (
+  pageNumber: number = 1,
+  pageSize: number = 20,
+  role?: string,
+  status?: string,
+  busca?: string
+): Promise<RespostaPaginada<EmployeeListItemResponse>> => {
+  const params = new URLSearchParams();
+  params.append('pageNumber', pageNumber.toString());
+  params.append('pageSize', pageSize.toString());
+  
+  if (role) params.append('role', role);
+  if (status) params.append('status', status);
+  if (busca) params.append('busca', busca);
+  
+  return await obterDados<RespostaPaginada<EmployeeListItemResponse>>(`/Users/funcionarios?${params.toString()}`);
+};
+
+export const obterAniversariantesDoMes = async (): Promise<BirthdayItem[]> => {
+  return await obterDados<BirthdayItem[]>('/Users/aniversariantes-mes');
+};
+
+export const exportarDadosUsuario = async (): Promise<Blob> => {
+  const response = await api.get('/Users/exportar-dados', {
+    responseType: 'blob',
+  });
+  return response.data;
+};
+
+export const solicitarExclusaoConta = async (confirmacao: string): Promise<{ success: boolean; message: string }> => {
+  return await excluirDados<{ success: boolean; message: string }>('/Users/solicitar-exclusao', {
+    data: { confirmacao }
+  });
+};
+
+export const exportarFuncionarios = async (
+  formato: 'excel' | 'pdf' = 'excel',
+  role?: string
+): Promise<Blob> => {
+  const params = new URLSearchParams();
+  params.append('format', formato);
+  if (role) params.append('role', role);
+  
+  const response = await api.get(`/Users/funcionarios/exportar?${params.toString()}`, {
+    responseType: 'blob',
+  });
+  return response.data;
+};
+
 export const ativarUsuario = async (id: string): Promise<void> => {
   return await atualizarDadosParcial<void>(`/Users/${id}/ativar`, {});
 };
 
-// Desativar usuário
 export const desativarUsuario = async (id: string): Promise<void> => {
   return await atualizarDadosParcial<void>(`/Users/${id}/desativar`, {});
 };
 
-// Excluir usuário
 export const excluirUsuario = async (id: string): Promise<void> => {
   return await excluirDados<void>(`/Users/${id}`);
-};
-
-// Atualizar preferências de notificação
-export const atualizarPreferenciasNotificacao = async (dados: import('../tipos').RequisicaoAtualizarPreferenciasNotificacao): Promise<void> => {
-  return await atualizarDados<void>('/Users/preferencias-notificacao', dados);
-};
-
-// Aceitar termos de uso
-export const aceitarTermos = async (): Promise<void> => {
-  return await enviarDados<void>('/Users/aceitar-termos', {});
 };

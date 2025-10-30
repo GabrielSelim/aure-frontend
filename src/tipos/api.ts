@@ -284,6 +284,168 @@ export interface DadosGrafico {
   data?: string;
 }
 
+// ============ USER PROFILE ============
+
+export interface UserProfileResponse {
+  id: string;
+  nome: string;
+  email: string;
+  role: number;
+  roleDescricao: string;
+  avatarUrl?: string | null;
+  dataNascimento?: string | null;
+  cpfMascarado?: string | null;
+  cpf?: string | null;
+  rg?: string | null;
+  cargo?: string | null;
+  telefoneCelular?: string | null;
+  telefoneFixo?: string | null;
+  enderecoRua?: string | null;
+  enderecoNumero?: string | null;
+  enderecoComplemento?: string | null;
+  enderecoBairro?: string | null;
+  enderecoCidade?: string | null;
+  enderecoEstado?: string | null;
+  enderecoPais?: string | null;
+  enderecoCep?: string | null;
+  enderecoCompleto?: string | null;
+  aceitouTermosUso: boolean;
+  dataAceiteTermosUso?: string | null;
+  versaoTermosUsoAceita?: string | null;
+  aceitouPoliticaPrivacidade: boolean;
+  dataAceitePoliticaPrivacidade?: string | null;
+  versaoPoliticaPrivacidadeAceita?: string | null;
+}
+
+export interface UpdateFullProfileRequest {
+  name?: string;
+  email?: string;
+  cpf?: string;
+  dataNascimento?: string;
+  telefone?: string;
+  celular?: string;
+  cargo?: string;
+  departamento?: string;
+  dataAdmissao?: string;
+  rua?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  pais?: string;
+  cep?: string;
+}
+
+export interface CompanyPJData {
+  razaoSocial?: string;
+  nomeFantasia?: string;
+  cnpj?: string;
+  inscricaoEstadual?: string;
+  inscricaoMunicipal?: string;
+  rua?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  pais?: string;
+  cep?: string;
+  telefone?: string;
+  email?: string;
+  site?: string;
+  atividadePrincipal?: string;
+  regimeTributario?: string;
+  dataAbertura?: string;
+}
+
+export interface UpdateCompanyPJRequest extends CompanyPJData {}
+
+export interface NotificationPreferencesDTO {
+  notificacaoEmailContratos?: boolean;
+  notificacaoEmailPagamentos?: boolean;
+  notificacaoEmailVencimentos?: boolean;
+  notificacaoEmailNovosUsuarios?: boolean;
+  notificacaoEmailSistema?: boolean;
+}
+
+export interface AcceptTermsRequest {
+  termsVersion: string;
+  accepted: boolean;
+  acceptedAt: string;
+}
+
+export interface TermsVersionsResponse {
+  currentTermsVersion: string;
+  currentPrivacyVersion: string;
+}
+
+export interface CompanyInfoResponse {
+  id: string;
+  razaoSocial: string;
+  nomeFantasia?: string;
+  cnpj: string;
+  tipo: string;
+  modeloNegocio: string;
+  rua?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  cep?: string;
+  telefone?: string;
+  email?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateCompanyRequest {
+  razaoSocial?: string;
+  nomeFantasia?: string;
+  cnpj?: string;
+  rua?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  cep?: string;
+  telefone?: string;
+  email?: string;
+}
+
+export interface EmployeeListItemResponse {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  companyName?: string;
+  cnpj?: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface BirthdayItem {
+  id: string;
+  name: string;
+  email: string;
+  dataNascimento: string;
+  avatarUrl?: string;
+}
+
+export interface CnpjValidationResponse {
+  isValid: boolean;
+  razaoSocial?: string;
+  nomeFantasia?: string;
+  message?: string;
+}
+
+export interface AvatarUploadResponse {
+  avatarUrl: string;
+  thumbnailUrl: string;
+}
+
 // ============ TIPOS DE ERRO ============
 
 export interface ErroApi {

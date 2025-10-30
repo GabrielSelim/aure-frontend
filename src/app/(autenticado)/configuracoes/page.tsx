@@ -24,20 +24,36 @@ import { useAutenticacao } from '../../../contextos/ContextoAutenticacao';
 import * as servicoUsuarios from '../../../servicos/usuarios';
 import * as servicoAutenticacao from '../../../servicos/autenticacao';
 import * as servicoEmpresas from '../../../servicos/empresas';
+import * as servicoPerfilUsuario from '../../../servicos/perfil-usuario';
+import { AvatarUpload } from '../../../componentes/perfil';
+import { InputCPF, InputCNPJ, InputTelefone, InputCEP } from '../../../componentes/formularios';
 
 type AbaAtiva = 'perfil' | 'empresa' | 'seguranca' | 'notificacoes' | 'sistema';
 
 interface DadosPerfil {
   nome: string;
   email: string;
-  telefone: string;
+  telefoneCelular: string;
+  telefoneFixo: string;
+  cpf: string;
+  rg: string;
   cargo: string;
+  dataNascimento: string;
+  avatar?: string;
+  enderecoRua: string;
+  enderecoNumero: string;
+  enderecoComplemento: string;
+  enderecoBairro: string;
+  enderecoCidade: string;
+  enderecoEstado: string;
+  enderecoCep: string;
 }
 
 interface DadosEmpresa {
   nome: string;
   cnpj: string;
   endereco: string;
+  cep: string;
   telefone: string;
   email: string;
 }
@@ -66,16 +82,29 @@ export default function PaginaConfiguracoes() {
 
   // Estados dos formulários
   const [dadosPerfil, setDadosPerfil] = useState<DadosPerfil>({
-    nome: usuario?.nome || '',
-    email: usuario?.email || '',
-    telefone: '',
-    cargo: ''
+    nome: '',
+    email: '',
+    telefoneCelular: '',
+    telefoneFixo: '',
+    cpf: '',
+    rg: '',
+    cargo: '',
+    dataNascimento: '',
+    avatar: '',
+    enderecoRua: '',
+    enderecoNumero: '',
+    enderecoComplemento: '',
+    enderecoBairro: '',
+    enderecoCidade: '',
+    enderecoEstado: '',
+    enderecoCep: ''
   });
 
   const [dadosEmpresa, setDadosEmpresa] = useState<DadosEmpresa>({
     nome: empresa?.nome || '',
     cnpj: empresa?.cnpj || '',
     endereco: '',
+    cep: '',
     telefone: '',
     email: ''
   });
@@ -102,22 +131,35 @@ export default function PaginaConfiguracoes() {
       setCarregando(true);
       setErro(null);
       
-      // Usar dados do contexto de autenticação
+      const perfilCompleto = await servicoPerfilUsuario.obterPerfilCompleto();
+      
       setDadosPerfil({
-        nome: usuario.nome || '',
-        email: usuario.email || '',
-        telefone: '', 
-        cargo: usuario.perfil || ''
+        nome: perfilCompleto.nome || '',
+        email: perfilCompleto.email || '',
+        telefoneCelular: perfilCompleto.telefoneCelular || '',
+        telefoneFixo: perfilCompleto.telefoneFixo || '',
+        cpf: perfilCompleto.cpf || '',
+        rg: perfilCompleto.rg || '',
+        cargo: perfilCompleto.cargo || '',
+        dataNascimento: perfilCompleto.dataNascimento || '',
+        avatar: perfilCompleto.avatarUrl || '',
+        enderecoRua: perfilCompleto.enderecoRua || '',
+        enderecoNumero: perfilCompleto.enderecoNumero || '',
+        enderecoComplemento: perfilCompleto.enderecoComplemento || '',
+        enderecoBairro: perfilCompleto.enderecoBairro || '',
+        enderecoCidade: perfilCompleto.enderecoCidade || '',
+        enderecoEstado: perfilCompleto.enderecoEstado || '',
+        enderecoCep: perfilCompleto.enderecoCep || ''
       });
       
-      // Se tiver empresa, usar dados do contexto (API não possui endpoint específico)
       if (empresa) {
         setDadosEmpresa({
           nome: empresa.nome || '',
           cnpj: empresa.cnpj || '',
-          endereco: '', // Campo adicional que será preenchido manualmente
-          telefone: '', // Campo adicional que será preenchido manualmente
-          email: '' // Campo adicional que será preenchido manualmente
+          endereco: '',
+          cep: '',
+          telefone: '',
+          email: ''
         });
       }
       
@@ -259,9 +301,208 @@ export default function PaginaConfiguracoes() {
           Atualizar Dados
         </button>
       </div>
+
+      <AvatarUpload
+        avatarAtual={dadosPerfil.avatar}
+        nomeUsuario={dadosPerfil.nome}
+        aoSucesso={(avatarUrl) => setDadosPerfil({ ...dadosPerfil, avatar: avatarUrl })}
+      />
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(20rem, 1fr))', gap: '1rem' }}>
-        
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            marginBottom: '0.5rem',
+            color: '#374151'
+          }}>
+            Nome Completo
+          </label>
+          <input
+            type="text"
+            value={dadosPerfil.nome}
+            onChange={(e) => setDadosPerfil({ ...dadosPerfil, nome: e.target.value })}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '0.375rem',
+              fontSize: '0.875rem',
+              outline: 'none'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+            onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+          />
+        </div>
+
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            marginBottom: '0.5rem',
+            color: '#374151'
+          }}>
+            E-mail
+          </label>
+          <input
+            type="email"
+            value={dadosPerfil.email}
+            onChange={(e) => setDadosPerfil({ ...dadosPerfil, email: e.target.value })}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '0.375rem',
+              fontSize: '0.875rem',
+              outline: 'none'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+            onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+          />
+        </div>
+
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            marginBottom: '0.5rem',
+            color: '#374151'
+          }}>
+            CPF
+          </label>
+          <InputCPF
+            valor={dadosPerfil.cpf}
+            aoMudar={(valor) => setDadosPerfil({ ...dadosPerfil, cpf: valor })}
+            placeholder="000.000.000-00"
+            mostrarValidacao={true}
+          />
+        </div>
+
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            marginBottom: '0.5rem',
+            color: '#374151'
+          }}>
+            RG
+          </label>
+          <input
+            type="text"
+            value={dadosPerfil.rg}
+            onChange={(e) => setDadosPerfil({ ...dadosPerfil, rg: e.target.value })}
+            placeholder="00.000.000-0"
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '0.375rem',
+              fontSize: '0.875rem',
+              outline: 'none'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+            onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+          />
+        </div>
+
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            marginBottom: '0.5rem',
+            color: '#374151'
+          }}>
+            Data de Nascimento
+          </label>
+          <input
+            type="date"
+            value={dadosPerfil.dataNascimento}
+            onChange={(e) => setDadosPerfil({ ...dadosPerfil, dataNascimento: e.target.value })}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '0.375rem',
+              fontSize: '0.875rem',
+              outline: 'none'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+            onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+          />
+        </div>
+
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            marginBottom: '0.5rem',
+            color: '#374151'
+          }}>
+            Cargo
+          </label>
+          <input
+            type="text"
+            value={dadosPerfil.cargo}
+            onChange={(e) => setDadosPerfil({ ...dadosPerfil, cargo: e.target.value })}
+            placeholder="Ex: Gerente, Desenvolvedor, etc."
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '0.375rem',
+              fontSize: '0.875rem',
+              outline: 'none'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+            onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+          />
+        </div>
+
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            marginBottom: '0.5rem',
+            color: '#374151'
+          }}>
+            Telefone Celular
+          </label>
+          <InputTelefone
+            valor={dadosPerfil.telefoneCelular}
+            aoMudar={(valor) => setDadosPerfil({ ...dadosPerfil, telefoneCelular: valor })}
+            placeholder="(11) 99999-9999"
+          />
+        </div>
+
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            marginBottom: '0.5rem',
+            color: '#374151'
+          }}>
+            Telefone Fixo
+          </label>
+          <InputTelefone
+            valor={dadosPerfil.telefoneFixo}
+            aoMudar={(valor) => setDadosPerfil({ ...dadosPerfil, telefoneFixo: valor })}
+            placeholder="(11) 3333-3333"
+          />
+        </div>
+      </div>
+
+      <div style={{ marginTop: '1.5rem' }}>
+        <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>
+          Endereço
+        </h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(20rem, 1fr))', gap: '1rem' }}>
           <div>
             <label style={{
@@ -271,12 +512,30 @@ export default function PaginaConfiguracoes() {
               marginBottom: '0.5rem',
               color: '#374151'
             }}>
-              Nome Completo
+              CEP
+            </label>
+            <InputCEP
+              valor={dadosPerfil.enderecoCep}
+              aoMudar={(valor) => setDadosPerfil({ ...dadosPerfil, enderecoCep: valor })}
+              placeholder="00000-000"
+            />
+          </div>
+
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              marginBottom: '0.5rem',
+              color: '#374151'
+            }}>
+              Rua
             </label>
             <input
               type="text"
-              value={dadosPerfil.nome}
-              onChange={(e) => setDadosPerfil({ ...dadosPerfil, nome: e.target.value })}
+              value={dadosPerfil.enderecoRua}
+              onChange={(e) => setDadosPerfil({ ...dadosPerfil, enderecoRua: e.target.value })}
+              placeholder="Nome da rua"
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -298,68 +557,126 @@ export default function PaginaConfiguracoes() {
               marginBottom: '0.5rem',
               color: '#374151'
             }}>
-              E-mail
-            </label>
-            <input
-              type="email"
-              value={dadosPerfil.email}
-              onChange={(e) => setDadosPerfil({ ...dadosPerfil, email: e.target.value })}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                outline: 'none'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-            />
-          </div>
-
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
-              Telefone
-            </label>
-            <input
-              type="tel"
-              value={dadosPerfil.telefone}
-              onChange={(e) => setDadosPerfil({ ...dadosPerfil, telefone: e.target.value })}
-              placeholder="(11) 99999-9999"
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                outline: 'none'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-            />
-          </div>
-
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
-              Cargo
+              Número
             </label>
             <input
               type="text"
-              value={dadosPerfil.cargo}
-              onChange={(e) => setDadosPerfil({ ...dadosPerfil, cargo: e.target.value })}
-              placeholder="Ex: Gerente, Desenvolvedor, etc."
+              value={dadosPerfil.enderecoNumero}
+              onChange={(e) => setDadosPerfil({ ...dadosPerfil, enderecoNumero: e.target.value })}
+              placeholder="123"
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                outline: 'none'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+            />
+          </div>
+
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              marginBottom: '0.5rem',
+              color: '#374151'
+            }}>
+              Complemento
+            </label>
+            <input
+              type="text"
+              value={dadosPerfil.enderecoComplemento}
+              onChange={(e) => setDadosPerfil({ ...dadosPerfil, enderecoComplemento: e.target.value })}
+              placeholder="Apto, Bloco, etc."
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                outline: 'none'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+            />
+          </div>
+
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              marginBottom: '0.5rem',
+              color: '#374151'
+            }}>
+              Bairro
+            </label>
+            <input
+              type="text"
+              value={dadosPerfil.enderecoBairro}
+              onChange={(e) => setDadosPerfil({ ...dadosPerfil, enderecoBairro: e.target.value })}
+              placeholder="Nome do bairro"
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                outline: 'none'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+            />
+          </div>
+
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              marginBottom: '0.5rem',
+              color: '#374151'
+            }}>
+              Cidade
+            </label>
+            <input
+              type="text"
+              value={dadosPerfil.enderecoCidade}
+              onChange={(e) => setDadosPerfil({ ...dadosPerfil, enderecoCidade: e.target.value })}
+              placeholder="Nome da cidade"
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                outline: 'none'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+            />
+          </div>
+
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              marginBottom: '0.5rem',
+              color: '#374151'
+            }}>
+              Estado
+            </label>
+            <input
+              type="text"
+              value={dadosPerfil.enderecoEstado}
+              onChange={(e) => setDadosPerfil({ ...dadosPerfil, enderecoEstado: e.target.value })}
+              placeholder="SP"
+              maxLength={2}
               style={{
                 width: '100%',
                 padding: '0.75rem',
@@ -373,29 +690,29 @@ export default function PaginaConfiguracoes() {
             />
           </div>
         </div>
+      </div>
 
-        <div style={{ marginTop: '1.5rem' }}>
-          <button
-            onClick={salvarPerfil}
-            disabled={carregando}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#2563eb',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.375rem',
-              fontSize: '0.875rem',
-              cursor: carregando ? 'not-allowed' : 'pointer',
-              opacity: carregando ? 0.5 : 1
-            }}
-          >
-            <Save style={{ height: '1rem', width: '1rem' }} />
-            {carregando ? 'Salvando...' : 'Salvar Alterações'}
-          </button>
-        </div>
+      <div style={{ marginTop: '1.5rem' }}>
+        <button
+          onClick={salvarPerfil}
+          disabled={carregando}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.75rem 1.5rem',
+            backgroundColor: '#2563eb',
+            color: 'white',
+            border: 'none',
+            borderRadius: '0.375rem',
+            fontSize: '0.875rem',
+            cursor: carregando ? 'not-allowed' : 'pointer',
+            opacity: carregando ? 0.5 : 1
+          }}
+        >
+          <Save style={{ height: '1rem', width: '1rem' }} />
+          {carregando ? 'Salvando...' : 'Salvar Alterações'}
+        </button>
       </div>
     </div>
   );
@@ -445,21 +762,11 @@ export default function PaginaConfiguracoes() {
             }}>
               CNPJ
             </label>
-            <input
-              type="text"
-              value={dadosEmpresa.cnpj}
-              onChange={(e) => setDadosEmpresa({ ...dadosEmpresa, cnpj: e.target.value })}
+            <InputCNPJ
+              valor={dadosEmpresa.cnpj}
+              aoMudar={(valor) => setDadosEmpresa({ ...dadosEmpresa, cnpj: valor })}
               placeholder="00.000.000/0000-00"
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                outline: 'none'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+              mostrarValidacao={true}
             />
           </div>
 
@@ -499,23 +806,29 @@ export default function PaginaConfiguracoes() {
               marginBottom: '0.5rem',
               color: '#374151'
             }}>
+              CEP
+            </label>
+            <InputCEP
+              valor={dadosEmpresa.cep}
+              aoMudar={(valor) => setDadosEmpresa({ ...dadosEmpresa, cep: valor })}
+              placeholder="00000-000"
+            />
+          </div>
+
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              marginBottom: '0.5rem',
+              color: '#374151'
+            }}>
               Telefone da Empresa
             </label>
-            <input
-              type="tel"
-              value={dadosEmpresa.telefone}
-              onChange={(e) => setDadosEmpresa({ ...dadosEmpresa, telefone: e.target.value })}
+            <InputTelefone
+              valor={dadosEmpresa.telefone}
+              aoMudar={(valor) => setDadosEmpresa({ ...dadosEmpresa, telefone: valor })}
               placeholder="(11) 3333-3333"
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                outline: 'none'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
             />
           </div>
 

@@ -8,12 +8,22 @@ import {
   Receipt,
   TrendingUp,
   Calendar,
-  CheckCircle
+  CheckCircle,
+  Briefcase,
+  UserCheck
 } from 'lucide-react';
+import { 
+  WidgetAniversariantes,
+  WidgetEstatistica,
+  WidgetResumoFinanceiro,
+  WidgetEstatisticasContratos,
+  WidgetEstatisticasFuncionarios
+} from '../../../componentes/dashboard';
 import * as relacionamentos from '../../../servicos/relacionamentos';
 import * as contratos from '../../../servicos/contratos';
 import * as pagamentos from '../../../servicos/pagamentos';
 import * as notasFiscais from '../../../servicos/notas-fiscais';
+import { PerfilUsuario } from '../../../tipos/entidades';
 
 interface EstatisticasPainel {
   totalUsuarios: number;
@@ -28,9 +38,15 @@ export default function PaginaPainel() {
   const [estatisticas, setEstatisticas] = useState<EstatisticasPainel | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<PerfilUsuario | null>(null);
 
   useEffect(() => {
-    // Adicionar um delay para evitar requisições simultâneas na inicialização
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      setUserRole(user.role);
+    }
+
     const timer = setTimeout(() => {
       carregarEstatisticas();
     }, 100);
@@ -175,49 +191,199 @@ export default function PaginaPainel() {
     );
   }
 
-  return (
-    <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {erro && (
+  const renderDashboardPorRole = () => {
+    if (!userRole) return renderDashboardPadrao();
+
+    switch (userRole) {
+      case PerfilUsuario.DonoEmpresaPai:
+        return renderDashboardDonoEmpresaPai();
+      case PerfilUsuario.Financeiro:
+        return renderDashboardFinanceiro();
+      case PerfilUsuario.Juridico:
+        return renderDashboardJuridico();
+      case PerfilUsuario.FuncionarioPJ:
+        return renderDashboardFuncionarioPJ();
+      case PerfilUsuario.FuncionarioCLT:
+        return renderDashboardFuncionarioCLT();
+      default:
+        return renderDashboardPadrao();
+    }
+  };
+
+  const renderDashboardDonoEmpresaPai = () => (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+      <WidgetResumoFinanceiro />
+      <WidgetEstatisticasContratos />
+      <WidgetEstatisticasFuncionarios />
+      <WidgetAniversariantes />
+      <div style={{ gridColumn: 'span 2' }}>
         <div style={{
-          padding: '0.75rem',
-          backgroundColor: '#fefdf3',
-          border: '1px solid #fde68a',
+          backgroundColor: '#ffffff',
+          border: '1px solid #e5e7eb',
           borderRadius: '0.5rem',
-          color: '#92400e',
-          fontSize: '0.875rem'
+          padding: '1.5rem'
         }}>
-          ⚠️ {erro}
+          <h3 style={{
+            fontSize: '1.125rem',
+            fontWeight: '600',
+            color: '#111827',
+            marginBottom: '1rem'
+          }}>
+            Ações Rápidas
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+            <button style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem',
+              backgroundColor: '#ffffff',
+              border: '1px solid #d1d5db',
+              borderRadius: '0.375rem',
+              fontSize: '0.875rem',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}>
+              <Users size={16} />
+              Convidar Funcionário
+            </button>
+            <button style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem',
+              backgroundColor: '#ffffff',
+              border: '1px solid #d1d5db',
+              borderRadius: '0.375rem',
+              fontSize: '0.875rem',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}>
+              <FileText size={16} />
+              Novo Contrato
+            </button>
+            <button style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem',
+              backgroundColor: '#ffffff',
+              border: '1px solid #d1d5db',
+              borderRadius: '0.375rem',
+              fontSize: '0.875rem',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}>
+              <CreditCard size={16} />
+              Processar Pagamento
+            </button>
+          </div>
         </div>
-      )}
-      
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#111827', marginBottom: '0.5rem' }}>
-            Painel de Controle
-          </h1>
-          <p style={{ color: '#6b7280' }}>
-            Visão geral das atividades da sua empresa
+      </div>
+    </div>
+  );
+
+  const renderDashboardFinanceiro = () => (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+      <WidgetEstatisticasContratos />
+      <WidgetEstatisticasFuncionarios />
+      <WidgetAniversariantes />
+      <WidgetEstatistica
+        titulo="Pagamentos Pendentes"
+        valor={estatisticas?.totalPagamentos || 0}
+        icone={CreditCard}
+        cor="#f59e0b"
+        descricao="Aguardando aprovação"
+      />
+    </div>
+  );
+
+  const renderDashboardJuridico = () => (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      <WidgetEstatisticasContratos />
+      <WidgetEstatistica
+        titulo="Documentos Pendentes"
+        valor={12}
+        icone={FileText}
+        cor="#f59e0b"
+        descricao="Aguardando revisão"
+      />
+    </div>
+  );
+
+  const renderDashboardFuncionarioPJ = () => (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+      <WidgetEstatistica
+        titulo="Próximo Pagamento"
+        valor="R$ 8.500,00"
+        icone={CreditCard}
+        cor="#10b981"
+        descricao="Dia 15 de Fevereiro"
+      />
+      <WidgetEstatistica
+        titulo="Contrato Ativo"
+        valor="Vigente"
+        icone={FileText}
+        cor="#2563eb"
+        descricao="Vence em 180 dias"
+      />
+      <div style={{ gridColumn: 'span 2' }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          border: '1px solid #e5e7eb',
+          borderRadius: '0.5rem',
+          padding: '1.5rem'
+        }}>
+          <h3 style={{
+            fontSize: '1.125rem',
+            fontWeight: '600',
+            color: '#111827',
+            marginBottom: '1rem'
+          }}>
+            Histórico de Pagamentos
+          </h3>
+          <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+            Gráfico dos últimos 6 meses será exibido aqui
           </p>
         </div>
-        <button
-          onClick={carregarEstatisticas}
-          style={{
-            padding: '0.5rem 1rem',
-            backgroundColor: '#2563eb',
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.375rem',
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            fontWeight: '500'
-          }}
-          onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#1d4ed8'}
-          onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#2563eb'}
-        >
-          Atualizar Dados
-        </button>
       </div>
+    </div>
+  );
 
+  const renderDashboardFuncionarioCLT = () => (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem' }}>
+      <WidgetEstatistica
+        titulo="Meu Contrato"
+        valor="CLT Vigente"
+        icone={Briefcase}
+        cor="#2563eb"
+        descricao="Tempo de casa: 2 anos"
+      />
+      <WidgetEstatistica
+        titulo="Documentos"
+        valor={5}
+        icone={FileText}
+        cor="#6b7280"
+        descricao="Disponíveis para download"
+      />
+      <WidgetEstatistica
+        titulo="Benefícios"
+        valor="Ativos"
+        icone={CheckCircle}
+        cor="#10b981"
+        descricao="Todos os benefícios ativos"
+      />
+    </div>
+  );
+
+  const renderDashboardPadrao = () => (
+    <>
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
@@ -512,6 +678,53 @@ export default function PaginaPainel() {
           </div>
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {erro && (
+        <div style={{
+          padding: '0.75rem',
+          backgroundColor: '#fefdf3',
+          border: '1px solid #fde68a',
+          borderRadius: '0.5rem',
+          color: '#92400e',
+          fontSize: '0.875rem'
+        }}>
+          ⚠️ {erro}
+        </div>
+      )}
+      
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#111827', marginBottom: '0.5rem' }}>
+            Painel de Controle
+          </h1>
+          <p style={{ color: '#6b7280' }}>
+            Visão geral das atividades da sua empresa
+          </p>
+        </div>
+        <button
+          onClick={carregarEstatisticas}
+          style={{
+            padding: '0.5rem 1rem',
+            backgroundColor: '#2563eb',
+            color: 'white',
+            border: 'none',
+            borderRadius: '0.375rem',
+            fontSize: '0.875rem',
+            cursor: 'pointer',
+            fontWeight: '500'
+          }}
+          onMouseEnter={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#1d4ed8'}
+          onMouseLeave={(e) => (e.target as HTMLButtonElement).style.backgroundColor = '#2563eb'}
+        >
+          Atualizar Dados
+        </button>
+      </div>
+
+      {renderDashboardPorRole()}
     </div>
   );
 }
