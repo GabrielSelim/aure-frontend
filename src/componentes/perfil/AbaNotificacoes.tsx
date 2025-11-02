@@ -252,7 +252,7 @@ export function AbaNotificacoes({ userRole, onSucesso, onErro }: AbaNotificacoes
           gap: '0.5rem'
         }}>
           <AlertCircle style={{ height: '1rem', width: '1rem', color: '#f59e0b' }} />
-          Você tem alterações não salvas. Clique em "Salvar Alterações" para confirmar.
+          Você tem alterações não salvas. Clique em &quot;Salvar Alterações&quot; para confirmar.
         </div>
       )}
 

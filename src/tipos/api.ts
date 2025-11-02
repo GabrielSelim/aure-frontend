@@ -395,7 +395,7 @@ export interface CompanyPJData {
   dataAbertura?: string;
 }
 
-export interface UpdateCompanyPJRequest extends CompanyPJData {}
+export type UpdateCompanyPJRequest = CompanyPJData;
 
 export interface NotificationPreferencesDTO {
   receberEmailNovoContrato?: boolean;
