@@ -75,27 +75,21 @@ export default function PaginaRegistro() {
         dataNascimento: dados.dataNascimento,
         email: dados.emailAdmin,
         password: dados.senha,
-        telefoneCelular: dados.telefoneCelular,
+        telefoneCelular: dados.telefoneCelular || '',
         telefoneFixo: dados.telefoneFixo || undefined,
-        cep: dados.cep,
-        rua: dados.rua,
-        numero: dados.numero,
+        cep: dados.cep || '',
+        rua: dados.rua || '',
+        numero: dados.numero || '',
         complemento: dados.complemento || undefined,
-        bairro: dados.bairro,
-        cidade: dados.cidade,
-        estado: dados.estado,
-        pais: dados.pais,
+        bairro: dados.bairro || '',
+        cidade: dados.cidade || '',
+        estado: dados.estado || '',
+        pais: dados.pais || '',
         aceitouTermosUso: true,
         versaoTermosUsoAceita: '1.0',
         aceitouPoliticaPrivacidade: true,
         versaoPoliticaPrivacidadeAceita: '1.0'
       };
-
-      if (typeof window !== 'undefined') {
-        console.log('=== DADOS ENVIADOS PARA API ===');
-        console.log(JSON.stringify(dadosApi, null, 2));
-        console.log('================================');
-      }
 
       await autenticacao.registrar(dadosApi);
       
@@ -106,13 +100,6 @@ export default function PaginaRegistro() {
         router.push('/entrar');
       }, 2000);
     } catch (error: any) {
-      if (typeof window !== 'undefined') {
-        console.error('=== ERRO NO REGISTRO ===');
-        console.error('Erro completo:', error);
-        console.error('Status:', error.response?.status);
-        console.error('Data:', error.response?.data);
-        console.error('========================');
-      }
       const mensagemErro = tratarErroApi(error);
       setErro(mensagemErro);
     } finally {

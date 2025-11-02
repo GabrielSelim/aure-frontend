@@ -130,6 +130,31 @@ export const esquemaConvite = z.object({
 
 export type DadosConvite = z.infer<typeof esquemaConvite>;
 
+// Função para validar CPF
+const validarCPF = (cpf: string): boolean => {
+  const cpfLimpo = cpf.replace(/[^\d]+/g, '');
+  if (cpfLimpo.length !== 11) return false;
+  if (/^(\d)\1+$/.test(cpfLimpo)) return false;
+  
+  let soma = 0;
+  for (let i = 0; i < 9; i++) {
+    soma += parseInt(cpfLimpo.charAt(i)) * (10 - i);
+  }
+  let resto = 11 - (soma % 11);
+  let digito1 = resto >= 10 ? 0 : resto;
+  
+  if (digito1 !== parseInt(cpfLimpo.charAt(9))) return false;
+  
+  soma = 0;
+  for (let i = 0; i < 10; i++) {
+    soma += parseInt(cpfLimpo.charAt(i)) * (11 - i);
+  }
+  resto = 11 - (soma % 11);
+  let digito2 = resto >= 10 ? 0 : resto;
+  
+  return digito2 === parseInt(cpfLimpo.charAt(10));
+};
+
 // Schema para aceitar convite
 export const esquemaAceitarConvite = z.object({
   senha: z
@@ -145,6 +170,74 @@ export const esquemaAceitarConvite = z.object({
   confirmarSenha: z
     .string()
     .min(1, 'Confirmação de senha é obrigatória'),
+
+  cpf: z
+    .string()
+    .min(1, 'CPF é obrigatório')
+    .refine((val) => validarCPF(val), {
+      message: 'CPF inválido',
+    }),
+
+  rg: z
+    .string()
+    .optional(),
+
+  dataNascimento: z
+    .string()
+    .min(1, 'Data de nascimento é obrigatória'),
+
+  telefoneCelular: z
+    .string()
+    .min(1, 'Telefone celular é obrigatório')
+    .min(14, 'Telefone celular deve ter pelo menos 10 dígitos'),
+
+  telefoneFixo: z
+    .string()
+    .optional(),
+
+  cep: z
+    .string()
+    .min(1, 'CEP é obrigatório')
+    .min(9, 'CEP deve ter 8 dígitos'),
+
+  rua: z
+    .string()
+    .min(1, 'Rua é obrigatória')
+    .min(3, 'Rua deve ter pelo menos 3 caracteres'),
+
+  numero: z
+    .string()
+    .min(1, 'Número é obrigatório'),
+
+  complemento: z
+    .string()
+    .optional(),
+
+  bairro: z
+    .string()
+    .min(1, 'Bairro é obrigatório')
+    .min(2, 'Bairro deve ter pelo menos 2 caracteres'),
+
+  cidade: z
+    .string()
+    .min(1, 'Cidade é obrigatória')
+    .min(2, 'Cidade deve ter pelo menos 2 caracteres'),
+
+  estado: z
+    .string()
+    .min(1, 'Estado é obrigatório')
+    .length(2, 'Estado deve ter 2 caracteres (UF)'),
+
+  pais: z
+    .string()
+    .min(1, 'País é obrigatório')
+    .min(2, 'País deve ter pelo menos 2 caracteres'),
+
+  termosAceitos: z
+    .boolean()
+    .refine((val) => val === true, {
+      message: 'Você deve aceitar os termos de uso e política de privacidade',
+    }),
 }).refine((data) => data.senha === data.confirmarSenha, {
   message: 'Senhas não coincidem',
   path: ['confirmarSenha'],

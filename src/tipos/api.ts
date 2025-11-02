@@ -142,6 +142,23 @@ export interface RespostaConvite {
 
 export interface RequisicaoAceitarConvite {
   password: string;
+  telefoneCelular: string;
+  rua: string;
+  cidade: string;
+  estado: string;
+  pais: string;
+  cep: string;
+  telefoneFixo?: string;
+  cpf: string;
+  rg?: string;
+  dataNascimento: string;
+  numero: string;
+  complemento?: string;
+  bairro: string;
+  aceitouTermosUso: boolean;
+  versaoTermosUsoAceita: string;
+  aceitouPoliticaPrivacidade: boolean;
+  versaoPoliticaPrivacidadeAceita: string;
 }
 
 export interface RequisicaoEditarConvite {
