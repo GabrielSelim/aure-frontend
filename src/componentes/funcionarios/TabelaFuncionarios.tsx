@@ -165,10 +165,10 @@ export function TabelaFuncionarios({ funcionarios, carregando }: TabelaFuncionar
                       fontWeight: '600',
                       color: corRole
                     }}>
-                      {obterIniciais(funcionario.name)}
+                      {obterIniciais(funcionario.nome)}
                     </div>
                     <span style={{ fontSize: '0.875rem', fontWeight: '500', color: '#111827' }}>
-                      {funcionario.name}
+                      {funcionario.nome}
                     </span>
                   </div>
                 </td>
@@ -190,12 +190,7 @@ export function TabelaFuncionarios({ funcionarios, carregando }: TabelaFuncionar
                   </span>
                 </td>
                 <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                  {funcionario.companyName || '-'}
-                  {funcionario.cnpj && (
-                    <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-                      {funcionario.cnpj}
-                    </div>
-                  )}
+                  {funcionario.empresaPJ || '-'}
                 </td>
                 <td style={{ padding: '0.75rem' }}>
                   <span style={{
@@ -213,7 +208,7 @@ export function TabelaFuncionarios({ funcionarios, carregando }: TabelaFuncionar
                   </span>
                 </td>
                 <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                  {formatarData(funcionario.createdAt)}
+                  {formatarData(funcionario.dataEntrada)}
                 </td>
               </tr>
             );
