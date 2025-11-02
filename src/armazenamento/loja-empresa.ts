@@ -56,8 +56,8 @@ export const useLojaEmpresa = create<LojaEmpresaState>()(
         carregarRelacionamentos: async () => {
           try {
             set({ carregando: true, erro: null });
-            const relacionamentos = await servicoRelacionamentos.listarRelacionamentos();
-            set({ relacionamentos });
+            const resposta = await servicoRelacionamentos.listarRelacionamentos();
+            set({ relacionamentos: resposta.items });
           } catch (error: any) {
             set({ erro: error.message || 'Erro ao carregar relacionamentos' });
           } finally {
@@ -68,8 +68,8 @@ export const useLojaEmpresa = create<LojaEmpresaState>()(
         carregarPJsContratados: async () => {
           try {
             set({ carregando: true, erro: null });
-            const pjsContratados = await servicoRelacionamentos.listarComoCliente();
-            set({ pjsContratados });
+            const resposta = await servicoRelacionamentos.listarComoCliente();
+            set({ pjsContratados: resposta.items });
           } catch (error: any) {
             set({ erro: error.message || 'Erro ao carregar PJs contratados' });
           } finally {
@@ -80,8 +80,8 @@ export const useLojaEmpresa = create<LojaEmpresaState>()(
         carregarEmpresasContratantes: async () => {
           try {
             set({ carregando: true, erro: null });
-            const empresasContratantes = await servicoRelacionamentos.listarComoFornecedor();
-            set({ empresasContratantes });
+            const resposta = await servicoRelacionamentos.listarComoFornecedor();
+            set({ empresasContratantes: resposta.items });
           } catch (error: any) {
             set({ erro: error.message || 'Erro ao carregar empresas contratantes' });
           } finally {
