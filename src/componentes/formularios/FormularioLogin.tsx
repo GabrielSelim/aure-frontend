@@ -45,7 +45,6 @@ export const FormularioLogin: React.FC<FormularioLoginProps> = ({
     defaultValues: {
       email: '',
       password: '',
-      lembrarMe: false,
     },
   });
 
@@ -196,39 +195,12 @@ export const FormularioLogin: React.FC<FormularioLoginProps> = ({
             )}
           </div>
 
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0.5rem 0'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <input
-                id="lembrarMe"
-                type="checkbox"
-                {...register('lembrarMe')}
-                style={{
-                  height: '1rem',
-                  width: '1rem',
-                  borderRadius: '0.25rem',
-                  border: '1px solid #d1d5db',
-                  accentColor: '#2563eb'
-                }}
-              />
-              <label
-                htmlFor="lembrarMe"
-                style={{
-                  fontSize: '0.875rem',
-                  color: '#6b7280',
-                  cursor: 'pointer',
-                  userSelect: 'none'
-                }}
-              >
-                Lembrar-me
-              </label>
-            </div>
-            
-            {onEsqueceuSenha && (
+          {onEsqueceuSenha && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              padding: '0.5rem 0'
+            }}>
               <button
                 type="button"
                 onClick={onEsqueceuSenha}
@@ -246,8 +218,8 @@ export const FormularioLogin: React.FC<FormularioLoginProps> = ({
               >
                 Esqueceu a senha?
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
           <button
             type="submit"

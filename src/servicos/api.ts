@@ -189,39 +189,86 @@ export const excluirDados = async <T>(url: string, config = {}): Promise<T> => {
 };
 
 // Função para tratar erros da API
-export const tratarErroApi = (error: any) => {
+export const tratarErroApi = (error: any): string => {
   if (error.response) {
-    // Erro de resposta do servidor
     const { data, status } = error.response;
+    
+    // 1. Tentar pegar campo 'erro' (português)
+    if (data?.erro) {
+      return data.erro;
+    }
+    
+    // 2. Tentar pegar mensagem direta
+    if (data?.message) {
+      return data.message;
+    }
     
     if (data?.mensagem) {
       return data.mensagem;
     }
     
-    if (data?.erros && Array.isArray(data.erros)) {
-      return data.erros.join(', ');
+    // 3. Tentar pegar title (ProblemDetails)
+    if (data?.title) {
+      return data.title;
     }
     
+    // 4. Tentar pegar detail (ProblemDetails)
+    if (data?.detail) {
+      return data.detail;
+    }
+    
+    // 5. Processar erros de validação (400 Bad Request)
+    if (status === 400 && data?.errors) {
+      const errors = data.errors;
+      const errorMessages: string[] = [];
+      
+      for (const field in errors) {
+        const fieldErrors = errors[field];
+        if (Array.isArray(fieldErrors)) {
+          errorMessages.push(...fieldErrors);
+        } else if (typeof fieldErrors === 'string') {
+          errorMessages.push(fieldErrors);
+        }
+      }
+      
+      if (errorMessages.length > 0) {
+        return errorMessages.join('; ');
+      }
+    }
+    
+    // 6. Array de erros simples
+    if (data?.erros && Array.isArray(data.erros)) {
+      return data.erros.join('; ');
+    }
+    
+    // 7. String de erro simples
+    if (typeof data === 'string') {
+      return data;
+    }
+    
+    // 8. Mensagens padrão por status HTTP
     switch (status) {
       case 400:
-        return 'Dados inválidos enviados para o servidor.';
+        return 'Dados inválidos. Verifique os campos e tente novamente.';
       case 401:
-        return 'Você não tem permissão para acessar este recurso.';
+        return 'Sessão expirada. Faça login novamente.';
       case 403:
-        return 'Acesso negado.';
+        return 'Você não tem permissão para realizar esta ação.';
       case 404:
         return 'Recurso não encontrado.';
+      case 409:
+        return 'Conflito: dados já existem no sistema.';
       case 500:
-        return 'Erro interno do servidor. Tente novamente mais tarde.';
+        return 'Erro no servidor. Tente novamente em alguns instantes.';
+      case 503:
+        return 'Serviço temporariamente indisponível.';
       default:
-        return `Erro ${status}: ${error.response.statusText}`;
+        return `Erro ${status}: ${error.response.statusText || 'Erro desconhecido'}`;
     }
   } else if (error.request) {
-    // Erro de rede
     return 'Erro de conexão. Verifique sua internet e tente novamente.';
   } else {
-    // Outros erros
-    return error.message || 'Erro desconhecido.';
+    return error.message || 'Erro desconhecido. Tente novamente.';
   }
 };
 

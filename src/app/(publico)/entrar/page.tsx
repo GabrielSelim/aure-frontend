@@ -34,8 +34,7 @@ export default function PaginaLogin() {
   };
 
   const handleEsqueceuSenha = () => {
-    // TODO: Implementar recuperação de senha
-    mostrarSucesso('Funcionalidade em desenvolvimento');
+    router.push('/recuperar-senha');
   };
 
   const handleRegistrar = () => {

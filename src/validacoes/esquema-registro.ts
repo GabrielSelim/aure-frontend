@@ -45,6 +45,33 @@ const validarCNPJ = (cnpj: string): boolean => {
   return resultado === parseInt(digitos.charAt(1));
 };
 
+// Função para validar CPF
+const validarCPF = (cpf: string): boolean => {
+  const cpfLimpo = cpf.replace(/[^\d]+/g, '');
+  
+  if (cpfLimpo.length !== 11) return false;
+  
+  if (/^(\d)\1+$/.test(cpfLimpo)) return false;
+  
+  let soma = 0;
+  for (let i = 0; i < 9; i++) {
+    soma += parseInt(cpfLimpo.charAt(i)) * (10 - i);
+  }
+  let resto = 11 - (soma % 11);
+  let digito1 = resto >= 10 ? 0 : resto;
+  
+  if (digito1 !== parseInt(cpfLimpo.charAt(9))) return false;
+  
+  soma = 0;
+  for (let i = 0; i < 10; i++) {
+    soma += parseInt(cpfLimpo.charAt(i)) * (11 - i);
+  }
+  resto = 11 - (soma % 11);
+  let digito2 = resto >= 10 ? 0 : resto;
+  
+  return digito2 === parseInt(cpfLimpo.charAt(10));
+};
+
 // Função personalizada de validação de senha
 const validarSenhaForte = (senha: string): boolean => {
   // Pelo menos 8 caracteres, 1 maiúscula, 1 minúscula, 1 número
@@ -75,6 +102,22 @@ export const esquemaRegistro = z.object({
     .max(255, 'Nome deve ter no máximo 255 caracteres')
     .trim(),
     
+  cpfAdmin: z
+    .string()
+    .min(1, 'CPF é obrigatório')
+    .refine(validarCPF, 'CPF inválido')
+    .transform((cpf) => cpf.replace(/[^\d]+/g, '')),
+    
+  dataNascimento: z
+    .string()
+    .min(1, 'Data de nascimento é obrigatória')
+    .refine((data) => {
+      const nascimento = new Date(data);
+      const hoje = new Date();
+      const idade = hoje.getFullYear() - nascimento.getFullYear();
+      return idade >= 18 && idade <= 120;
+    }, 'Idade deve estar entre 18 e 120 anos'),
+    
   emailAdmin: z
     .string()
     .min(1, 'Email é obrigatório')
@@ -101,25 +144,39 @@ export const esquemaRegistro = z.object({
     .string()
     .optional(),
     
+  cep: z
+    .string()
+    .min(1, 'CEP é obrigatório')
+    .length(8, 'CEP deve ter 8 dígitos'),
+    
   rua: z
     .string()
+    .min(1, 'Rua é obrigatória'),
+    
+  numero: z
+    .string()
+    .min(1, 'Número é obrigatório'),
+    
+  complemento: z
+    .string()
     .optional(),
+    
+  bairro: z
+    .string()
+    .min(1, 'Bairro é obrigatório'),
     
   cidade: z
     .string()
-    .optional(),
+    .min(1, 'Cidade é obrigatória'),
     
   estado: z
     .string()
-    .optional(),
+    .min(1, 'Estado é obrigatório')
+    .length(2, 'Estado deve ter 2 letras'),
     
   pais: z
     .string()
-    .optional(),
-    
-  cep: z
-    .string()
-    .optional(),
+    .min(1, 'País é obrigatório'),
     
   termosAceitos: z
     .boolean()

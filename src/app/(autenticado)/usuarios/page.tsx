@@ -7,31 +7,45 @@ import {
   Edit2, 
   Trash2,
   UserCheck,
-  UserX
+  UserX,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
-import { Usuario } from '../../../tipos/entidades';
+import { EmployeeListItemResponse } from '../../../tipos';
 import * as usuarios from '../../../servicos/usuarios';
 
 export default function PaginaUsuarios() {
-  const [listaUsuarios, setListaUsuarios] = useState<Usuario[]>([]);
+  const [listaUsuarios, setListaUsuarios] = useState<EmployeeListItemResponse[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [carregandoAcao, setCarregandoAcao] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [termoBusca, setTermoBusca] = useState('');
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const [totalPaginas, setTotalPaginas] = useState(1);
+  const [totalItens, setTotalItens] = useState(0);
+  const tamanhoPagina = 20;
 
   useEffect(() => {
     carregarUsuarios();
-  }, []);
+  }, [paginaAtual, termoBusca]);
 
   const carregarUsuarios = async () => {
     try {
       setCarregando(true);
       setErro(null);
-      const dadosUsuarios = await usuarios.listarUsuarios().catch(() => []);
-      setListaUsuarios(Array.isArray(dadosUsuarios) ? dadosUsuarios : []);
+      const resposta = await usuarios.listarFuncionarios(
+        paginaAtual, 
+        tamanhoPagina,
+        undefined,
+        undefined,
+        termoBusca || undefined
+      );
+      setListaUsuarios(resposta.items || []);
+      setTotalPaginas(resposta.totalPages || 1);
+      setTotalItens(resposta.totalCount || 0);
     } catch (error: any) {
-      setErro('Algumas informações podem não estar atualizadas devido a problemas de conectividade.');
+      setErro('Erro ao carregar usuários. Tente novamente.');
       setListaUsuarios([]);
     } finally {
       setCarregando(false);
@@ -80,10 +94,34 @@ export default function PaginaUsuarios() {
     }
   };
 
-  const usuariosFiltrados = listaUsuarios.filter(usuario =>
-    usuario.nome.toLowerCase().includes(termoBusca.toLowerCase()) ||
-    usuario.email.toLowerCase().includes(termoBusca.toLowerCase())
-  );
+  const obterTextoRole = (role: string): string => {
+    const roles: Record<string, string> = {
+      'DonoEmpresaPai': 'Dono Empresa',
+      'Financeiro': 'Financeiro',
+      'Juridico': 'Jurídico',
+      'FuncionarioCLT': 'CLT',
+      'FuncionarioPJ': 'PJ',
+    };
+    return roles[role] || role;
+  };
+
+  const obterTextoStatus = (status: string): string => {
+    const statusMap: Record<string, string> = {
+      'Active': 'Ativo',
+      'Inactive': 'Inativo',
+      'Pending': 'Pendente',
+    };
+    return statusMap[status] || status;
+  };
+
+  const obterCorStatus = (status: string): { bg: string; text: string } => {
+    const cores: Record<string, { bg: string; text: string }> = {
+      'Active': { bg: '#d1fae5', text: '#059669' },
+      'Inactive': { bg: '#fee2e2', text: '#dc2626' },
+      'Pending': { bg: '#fef3c7', text: '#d97706' },
+    };
+    return cores[status] || { bg: '#e5e7eb', text: '#6b7280' };
+  };
 
   if (carregando) {
     return (
@@ -177,7 +215,7 @@ export default function PaginaUsuarios() {
             Lista de Usuários
           </h2>
           <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-            {usuariosFiltrados.length} usuário(s) encontrado(s)
+            {totalItens} usuário(s) encontrado(s)
           </p>
         </div>
         
@@ -196,7 +234,10 @@ export default function PaginaUsuarios() {
               <input
                 placeholder="Buscar usuários..."
                 value={termoBusca}
-                onChange={(e: any) => setTermoBusca(e.target.value)}
+                onChange={(e: any) => {
+                  setTermoBusca(e.target.value);
+                  setPaginaAtual(1);
+                }}
                 style={{
                   width: '100%',
                   padding: '0.5rem 0.75rem 0.5rem 2rem',
@@ -210,7 +251,10 @@ export default function PaginaUsuarios() {
               />
             </div>
             <button
-              onClick={carregarUsuarios}
+              onClick={() => {
+                setPaginaAtual(1);
+                carregarUsuarios();
+              }}
               style={{
                 padding: '0.5rem 1rem',
                 backgroundColor: 'white',
@@ -232,119 +276,184 @@ export default function PaginaUsuarios() {
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '500', color: '#374151' }}>Nome</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '500', color: '#374151' }}>Email</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '500', color: '#374151' }}>Perfil</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '500', color: '#374151' }}>Cargo</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '500', color: '#374151' }}>Status</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '500', color: '#374151' }}>Última Atividade</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '500', color: '#374151' }}>Data de Entrada</th>
                   <th style={{ padding: '0.75rem', textAlign: 'right', fontWeight: '500', color: '#374151' }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
-                {usuariosFiltrados.length === 0 ? (
+                {listaUsuarios.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>
+                    <td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>
                       Nenhum usuário encontrado
                     </td>
                   </tr>
                 ) : (
-                  usuariosFiltrados.map((usuario) => (
-                    <tr key={usuario.id} style={{ borderTop: '1px solid #e5e7eb' }}>
-                      <td style={{ padding: '0.75rem', fontWeight: '500' }}>
-                        {usuario.nome}
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>{usuario.email}</td>
-                      <td style={{ padding: '0.75rem' }}>
-                        <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          padding: '0.125rem 0.625rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.75rem',
-                          fontWeight: '500',
-                          backgroundColor: '#dbeafe',
-                          color: '#1e40af'
-                        }}>
-                          {usuario.perfil}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <div style={{
-                            width: '0.5rem',
-                            height: '0.5rem',
-                            borderRadius: '50%',
-                            backgroundColor: usuario.ativo ? '#059669' : '#dc2626'
-                          }}></div>
-                          <span style={{ 
+                  listaUsuarios.map((usuario) => {
+                    const cores = obterCorStatus(usuario.status);
+                    const isAtivo = usuario.status === 'Active';
+                    
+                    return (
+                      <tr key={usuario.id} style={{ borderTop: '1px solid #e5e7eb' }}>
+                        <td style={{ padding: '0.75rem', fontWeight: '500' }}>
+                          {usuario.nome}
+                        </td>
+                        <td style={{ padding: '0.75rem' }}>{usuario.email}</td>
+                        <td style={{ padding: '0.75rem' }}>
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            padding: '0.125rem 0.625rem',
+                            borderRadius: '9999px',
                             fontSize: '0.75rem',
-                            color: usuario.ativo ? '#059669' : '#dc2626'
+                            fontWeight: '500',
+                            backgroundColor: '#dbeafe',
+                            color: '#1e40af'
                           }}>
-                            {usuario.ativo ? 'Ativo' : 'Inativo'}
+                            {obterTextoRole(usuario.role)}
                           </span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '0.75rem', color: '#6b7280' }}>
-                        {new Date(usuario.atualizadoEm).toLocaleDateString('pt-BR')}
-                      </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                          <button style={{
-                            padding: '0.375rem',
-                            backgroundColor: 'white',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '0.25rem',
-                            cursor: 'pointer'
-                          }}>
-                            <Edit2 style={{ height: '1rem', width: '1rem' }} />
-                          </button>
-                          
-                          <button
-                            onClick={() => {
-                              if (confirm(usuario.ativo ? 'Desativar usuário?' : 'Ativar usuário?')) {
-                                alternarStatusUsuario(usuario.id, usuario.ativo);
-                              }
-                            }}
-                            disabled={carregandoAcao === usuario.id}
-                            style={{
+                        </td>
+                        <td style={{ padding: '0.75rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                          {usuario.cargo || '-'}
+                        </td>
+                        <td style={{ padding: '0.75rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{
+                              width: '0.5rem',
+                              height: '0.5rem',
+                              borderRadius: '50%',
+                              backgroundColor: cores.text
+                            }}></div>
+                            <span style={{ 
+                              fontSize: '0.75rem',
+                              color: cores.text
+                            }}>
+                              {obterTextoStatus(usuario.status)}
+                            </span>
+                          </div>
+                        </td>
+                        <td style={{ padding: '0.75rem', color: '#6b7280', fontSize: '0.875rem' }}>
+                          {new Date(usuario.dataEntrada).toLocaleDateString('pt-BR')}
+                        </td>
+                        <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                            <button style={{
                               padding: '0.375rem',
                               backgroundColor: 'white',
                               border: '1px solid #d1d5db',
                               borderRadius: '0.25rem',
-                              cursor: carregandoAcao === usuario.id ? 'not-allowed' : 'pointer',
-                              opacity: carregandoAcao === usuario.id ? 0.5 : 1
-                            }}
-                          >
-                            {usuario.ativo ? (
-                              <UserX style={{ height: '1rem', width: '1rem' }} />
-                            ) : (
-                              <UserCheck style={{ height: '1rem', width: '1rem' }} />
-                            )}
-                          </button>
+                              cursor: 'pointer'
+                            }}>
+                              <Edit2 style={{ height: '1rem', width: '1rem' }} />
+                            </button>
+                            
+                            <button
+                              onClick={() => {
+                                if (confirm(isAtivo ? 'Desativar usuário?' : 'Ativar usuário?')) {
+                                  alternarStatusUsuario(usuario.id, isAtivo);
+                                }
+                              }}
+                              disabled={carregandoAcao === usuario.id}
+                              style={{
+                                padding: '0.375rem',
+                                backgroundColor: 'white',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '0.25rem',
+                                cursor: carregandoAcao === usuario.id ? 'not-allowed' : 'pointer',
+                                opacity: carregandoAcao === usuario.id ? 0.5 : 1
+                              }}
+                            >
+                              {isAtivo ? (
+                                <UserX style={{ height: '1rem', width: '1rem' }} />
+                              ) : (
+                                <UserCheck style={{ height: '1rem', width: '1rem' }} />
+                              )}
+                            </button>
 
-                          <button
-                            onClick={() => {
-                              if (confirm('Excluir usuário permanentemente?')) {
-                                excluirUsuario(usuario.id);
-                              }
-                            }}
-                            disabled={carregandoAcao === usuario.id}
-                            style={{
-                              padding: '0.375rem',
-                              backgroundColor: 'white',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '0.25rem',
-                              cursor: carregandoAcao === usuario.id ? 'not-allowed' : 'pointer',
-                              opacity: carregandoAcao === usuario.id ? 0.5 : 1
-                            }}
-                          >
-                            <Trash2 style={{ height: '1rem', width: '1rem', color: '#dc2626' }} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                            <button
+                              onClick={() => {
+                                if (confirm('Excluir usuário permanentemente?')) {
+                                  excluirUsuario(usuario.id);
+                                }
+                              }}
+                              disabled={carregandoAcao === usuario.id}
+                              style={{
+                                padding: '0.375rem',
+                                backgroundColor: 'white',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '0.25rem',
+                                cursor: carregandoAcao === usuario.id ? 'not-allowed' : 'pointer',
+                                opacity: carregandoAcao === usuario.id ? 0.5 : 1
+                              }}
+                            >
+                              <Trash2 style={{ height: '1rem', width: '1rem', color: '#dc2626' }} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
           </div>
+
+          {totalPaginas > 1 && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: '1rem',
+              padding: '0.75rem',
+              backgroundColor: '#f9fafb',
+              borderRadius: '0.375rem'
+            }}>
+              <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                Página {paginaAtual} de {totalPaginas}
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => setPaginaAtual(prev => Math.max(1, prev - 1))}
+                  disabled={paginaAtual === 1}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: 'white',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    cursor: paginaAtual === 1 ? 'not-allowed' : 'pointer',
+                    opacity: paginaAtual === 1 ? 0.5 : 1
+                  }}
+                >
+                  <ChevronLeft style={{ height: '1rem', width: '1rem' }} />
+                  Anterior
+                </button>
+                <button
+                  onClick={() => setPaginaAtual(prev => Math.min(totalPaginas, prev + 1))}
+                  disabled={paginaAtual === totalPaginas}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    padding: '0.5rem 0.75rem',
+                    backgroundColor: 'white',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    cursor: paginaAtual === totalPaginas ? 'not-allowed' : 'pointer',
+                    opacity: paginaAtual === totalPaginas ? 0.5 : 1
+                  }}
+                >
+                  Próxima
+                  <ChevronRight style={{ height: '1rem', width: '1rem' }} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

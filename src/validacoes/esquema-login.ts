@@ -16,8 +16,6 @@ export const esquemaLogin = z.object({
     .min(1, 'Senha é obrigatória')
     .min(6, 'Senha deve ter pelo menos 6 caracteres')
     .max(100, 'Senha deve ter no máximo 100 caracteres'),
-    
-  lembrarMe: z.boolean().optional().default(false),
 });
 
 export type DadosLogin = z.infer<typeof esquemaLogin>;

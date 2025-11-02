@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { Eye, EyeOff, Building2, UserPlus, Phone, MapPin } from 'lucide-react';
+import { Eye, EyeOff, Building2, UserPlus, Phone, MapPin, Search } from 'lucide-react';
 import { esquemaRegistro, type DadosRegistro } from '../../../validacoes/esquema-registro';
 import * as autenticacao from '../../../servicos/autenticacao';
 import { Seletor } from '../../../components/Seletor';
+import { buscarEnderecoPorCEP } from '../../../servicos/viacep';
+import { tratarErroApi } from '../../../servicos/api';
 
 export default function PaginaRegistro() {
   const router = useRouter();
@@ -17,16 +19,44 @@ export default function PaginaRegistro() {
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false);
+  const [buscandoCEP, setBuscandoCEP] = useState(false);
 
   const {
     register,
     handleSubmit,
     control,
     formState: { errors },
-    reset
+    reset,
+    setValue
   } = useForm<DadosRegistro>({
     resolver: zodResolver(esquemaRegistro)
   });
+
+  const buscarCEP = async (cep: string) => {
+    const cepLimpo = cep.replace(/\D/g, '');
+    
+    if (cepLimpo.length !== 8) {
+      return;
+    }
+
+    setBuscandoCEP(true);
+    try {
+      const endereco = await buscarEnderecoPorCEP(cepLimpo);
+      
+      if (endereco) {
+        setValue('rua', endereco.logradouro);
+        setValue('bairro', endereco.bairro);
+        setValue('cidade', endereco.localidade);
+        setValue('estado', endereco.uf);
+        setValue('pais', 'Brasil');
+        setErro(null);
+      }
+    } catch (error) {
+      setErro(null);
+    } finally {
+      setBuscandoCEP(false);
+    }
+  };
 
   const aoSubmeter = async (dados: DadosRegistro) => {
     try {
@@ -41,17 +71,31 @@ export default function PaginaRegistro() {
         companyType: 'Client' as any,
         businessModel: 'MainCompany' as any,
         name: dados.nomeAdmin,
+        cpf: dados.cpfAdmin,
+        dataNascimento: dados.dataNascimento,
         email: dados.emailAdmin,
         password: dados.senha,
-        telefoneCelular: dados.telefoneCelular || undefined,
+        telefoneCelular: dados.telefoneCelular,
         telefoneFixo: dados.telefoneFixo || undefined,
-        rua: dados.rua || undefined,
-        cidade: dados.cidade || undefined,
-        estado: dados.estado || undefined,
-        pais: dados.pais || undefined,
-        cep: dados.cep || undefined,
-        aceitarTermos: dados.termosAceitos
+        cep: dados.cep,
+        rua: dados.rua,
+        numero: dados.numero,
+        complemento: dados.complemento || undefined,
+        bairro: dados.bairro,
+        cidade: dados.cidade,
+        estado: dados.estado,
+        pais: dados.pais,
+        aceitouTermosUso: true,
+        versaoTermosUsoAceita: '1.0',
+        aceitouPoliticaPrivacidade: true,
+        versaoPoliticaPrivacidadeAceita: '1.0'
       };
+
+      if (typeof window !== 'undefined') {
+        console.log('=== DADOS ENVIADOS PARA API ===');
+        console.log(JSON.stringify(dadosApi, null, 2));
+        console.log('================================');
+      }
 
       await autenticacao.registrar(dadosApi);
       
@@ -62,7 +106,15 @@ export default function PaginaRegistro() {
         router.push('/entrar');
       }, 2000);
     } catch (error: any) {
-      setErro(error.message || 'Erro ao realizar registro');
+      if (typeof window !== 'undefined') {
+        console.error('=== ERRO NO REGISTRO ===');
+        console.error('Erro completo:', error);
+        console.error('Status:', error.response?.status);
+        console.error('Data:', error.response?.data);
+        console.error('========================');
+      }
+      const mensagemErro = tratarErroApi(error);
+      setErro(mensagemErro);
     } finally {
       setCarregando(false);
     }
@@ -343,6 +395,78 @@ export default function PaginaRegistro() {
             </div>
 
             <div>
+              <label htmlFor="cpfAdmin" style={{
+                display: 'block',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                marginBottom: '0.5rem',
+                color: '#374151'
+              }}>
+                CPF do Administrador
+              </label>
+              <input
+                id="cpfAdmin"
+                type="text"
+                placeholder="000.000.000-00"
+                {...register('cpfAdmin')}
+                disabled={carregando}
+                maxLength={14}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  backgroundColor: carregando ? '#f9fafb' : 'white',
+                  outline: 'none'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+              />
+              {errors.cpfAdmin && (
+                <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                  {errors.cpfAdmin.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="dataNascimento" style={{
+                display: 'block',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                marginBottom: '0.5rem',
+                color: '#374151'
+              }}>
+                Data de Nascimento
+              </label>
+              <input
+                id="dataNascimento"
+                type="date"
+                {...register('dataNascimento')}
+                disabled={carregando}
+                max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                min={new Date(new Date().setFullYear(new Date().getFullYear() - 120)).toISOString().split('T')[0]}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  backgroundColor: carregando ? '#f9fafb' : 'white',
+                  outline: 'none'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+              />
+              {errors.dataNascimento && (
+                <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                  {errors.dataNascimento.message}
+                </p>
+              )}
+            </div>
+
+            <div>
               <label htmlFor="senha" style={{
                 display: 'block',
                 fontSize: '0.875rem',
@@ -474,6 +598,72 @@ export default function PaginaRegistro() {
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
+                  <label htmlFor="cep" style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    marginBottom: '0.5rem',
+                    color: '#374151'
+                  }}>
+                    CEP
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      id="cep"
+                      type="text"
+                      placeholder="00000-000"
+                      {...register('cep')}
+                      disabled={carregando || buscandoCEP}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#d1d5db';
+                        buscarCEP(e.target.value);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        paddingRight: '3rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.875rem',
+                        backgroundColor: (carregando || buscandoCEP) ? '#f3f4f6' : 'white',
+                        outline: 'none'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                    />
+                    {buscandoCEP && (
+                      <div style={{
+                        position: 'absolute',
+                        right: '0.75rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        width: '1rem',
+                        height: '1rem',
+                        border: '2px solid #d1d5db',
+                        borderTop: '2px solid #2563eb',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }} />
+                    )}
+                    {!buscandoCEP && (
+                      <Search style={{
+                        position: 'absolute',
+                        right: '0.75rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        height: '1rem',
+                        width: '1rem',
+                        color: '#9ca3af'
+                      }} />
+                    )}
+                  </div>
+                  {errors.cep && (
+                    <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                      {errors.cep.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
                   <label htmlFor="rua" style={{
                     display: 'block',
                     fontSize: '0.875rem',
@@ -481,21 +671,21 @@ export default function PaginaRegistro() {
                     marginBottom: '0.5rem',
                     color: '#374151'
                   }}>
-                    Rua / Endereço
+                    Rua / Logradouro
                   </label>
                   <input
                     id="rua"
                     type="text"
-                    placeholder="Rua, número, complemento"
+                    placeholder="Nome da rua"
                     {...register('rua')}
-                    disabled={carregando}
+                    disabled={carregando || buscandoCEP}
                     style={{
                       width: '100%',
                       padding: '0.75rem',
                       border: '1px solid #d1d5db',
                       borderRadius: '0.5rem',
                       fontSize: '0.875rem',
-                      backgroundColor: carregando ? '#f3f4f6' : 'white',
+                      backgroundColor: (carregando || buscandoCEP) ? '#f3f4f6' : 'white',
                       outline: 'none'
                     }}
                     onFocus={(e) => e.target.style.borderColor = '#2563eb'}
@@ -510,6 +700,113 @@ export default function PaginaRegistro() {
 
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <div style={{ flex: 1 }}>
+                    <label htmlFor="numero" style={{
+                      display: 'block',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      marginBottom: '0.5rem',
+                      color: '#374151'
+                    }}>
+                      Número
+                    </label>
+                    <input
+                      id="numero"
+                      type="text"
+                      placeholder="123"
+                      {...register('numero')}
+                      disabled={carregando || buscandoCEP}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.875rem',
+                        backgroundColor: (carregando || buscandoCEP) ? '#f3f4f6' : 'white',
+                        outline: 'none'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                      onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                    />
+                    {errors.numero && (
+                      <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                        {errors.numero.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div style={{ flex: 2 }}>
+                    <label htmlFor="complemento" style={{
+                      display: 'block',
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      marginBottom: '0.5rem',
+                      color: '#374151'
+                    }}>
+                      Complemento
+                    </label>
+                    <input
+                      id="complemento"
+                      type="text"
+                      placeholder="Apto, Sala, etc."
+                      {...register('complemento')}
+                      disabled={carregando || buscandoCEP}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.875rem',
+                        backgroundColor: (carregando || buscandoCEP) ? '#f3f4f6' : 'white',
+                        outline: 'none'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                      onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                    />
+                    {errors.complemento && (
+                      <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                        {errors.complemento.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="bairro" style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    marginBottom: '0.5rem',
+                    color: '#374151'
+                  }}>
+                    Bairro
+                  </label>
+                  <input
+                    id="bairro"
+                    type="text"
+                    placeholder="Nome do bairro"
+                    {...register('bairro')}
+                    disabled={carregando || buscandoCEP}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '0.5rem',
+                      fontSize: '0.875rem',
+                      backgroundColor: (carregando || buscandoCEP) ? '#f3f4f6' : 'white',
+                      outline: 'none'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                  />
+                  {errors.bairro && (
+                    <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                      {errors.bairro.message}
+                    </p>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div style={{ flex: 2 }}>
                     <label htmlFor="cidade" style={{
                       display: 'block',
                       fontSize: '0.875rem',
@@ -524,14 +821,14 @@ export default function PaginaRegistro() {
                       type="text"
                       placeholder="Nome da cidade"
                       {...register('cidade')}
-                      disabled={carregando}
+                      disabled={carregando || buscandoCEP}
                       style={{
                         width: '100%',
                         padding: '0.75rem',
                         border: '1px solid #d1d5db',
                         borderRadius: '0.5rem',
                         fontSize: '0.875rem',
-                        backgroundColor: carregando ? '#f3f4f6' : 'white',
+                        backgroundColor: (carregando || buscandoCEP) ? '#f3f4f6' : 'white',
                         outline: 'none'
                       }}
                       onFocus={(e) => e.target.style.borderColor = '#2563eb'}
@@ -552,22 +849,24 @@ export default function PaginaRegistro() {
                       marginBottom: '0.5rem',
                       color: '#374151'
                     }}>
-                      Estado
+                      Estado (UF)
                     </label>
                     <input
                       id="estado"
                       type="text"
-                      placeholder="SP, RJ, MG..."
+                      placeholder="SP"
+                      maxLength={2}
                       {...register('estado')}
-                      disabled={carregando}
+                      disabled={carregando || buscandoCEP}
                       style={{
                         width: '100%',
                         padding: '0.75rem',
                         border: '1px solid #d1d5db',
                         borderRadius: '0.5rem',
                         fontSize: '0.875rem',
-                        backgroundColor: carregando ? '#f3f4f6' : 'white',
-                        outline: 'none'
+                        backgroundColor: (carregando || buscandoCEP) ? '#f3f4f6' : 'white',
+                        outline: 'none',
+                        textTransform: 'uppercase'
                       }}
                       onFocus={(e) => e.target.style.borderColor = '#2563eb'}
                       onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
@@ -580,76 +879,39 @@ export default function PaginaRegistro() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <div style={{ flex: 1 }}>
-                    <label htmlFor="pais" style={{
-                      display: 'block',
+                <div>
+                  <label htmlFor="pais" style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    marginBottom: '0.5rem',
+                    color: '#374151'
+                  }}>
+                    País
+                  </label>
+                  <input
+                    id="pais"
+                    type="text"
+                    placeholder="Brasil"
+                    {...register('pais')}
+                    disabled={carregando || buscandoCEP}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '0.5rem',
                       fontSize: '0.875rem',
-                      fontWeight: '500',
-                      marginBottom: '0.5rem',
-                      color: '#374151'
-                    }}>
-                      País
-                    </label>
-                    <input
-                      id="pais"
-                      type="text"
-                      placeholder="Brasil, Argentina..."
-                      {...register('pais')}
-                      disabled={carregando}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '0.5rem',
-                        fontSize: '0.875rem',
-                        backgroundColor: carregando ? '#f3f4f6' : 'white',
-                        outline: 'none'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-                      onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                    />
-                    {errors.pais && (
-                      <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
-                        {errors.pais.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div style={{ flex: 1 }}>
-                    <label htmlFor="cep" style={{
-                      display: 'block',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      marginBottom: '0.5rem',
-                      color: '#374151'
-                    }}>
-                      CEP
-                    </label>
-                    <input
-                      id="cep"
-                      type="text"
-                      placeholder="00000-000"
-                      {...register('cep')}
-                      disabled={carregando}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '0.5rem',
-                        fontSize: '0.875rem',
-                        backgroundColor: carregando ? '#f3f4f6' : 'white',
-                        outline: 'none'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-                      onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                    />
-                    {errors.cep && (
-                      <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
-                        {errors.cep.message}
-                      </p>
-                    )}
-                  </div>
+                      backgroundColor: (carregando || buscandoCEP) ? '#f3f4f6' : 'white',
+                      outline: 'none'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                  />
+                  {errors.pais && (
+                    <p style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                      {errors.pais.message}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -691,14 +953,47 @@ export default function PaginaRegistro() {
 
             {erro && (
               <div style={{
-                padding: '0.75rem',
+                padding: '1rem',
                 backgroundColor: '#fef2f2',
                 border: '1px solid #fecaca',
                 borderRadius: '0.5rem',
-                color: '#dc2626',
                 fontSize: '0.875rem'
               }}>
-                {erro}
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'flex-start', 
+                  gap: '0.5rem',
+                  color: '#dc2626'
+                }}>
+                  <div style={{
+                    width: '1.25rem',
+                    height: '1.25rem',
+                    backgroundColor: '#dc2626',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold',
+                    flexShrink: 0,
+                    marginTop: '0.125rem'
+                  }}>
+                    !
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: '600', marginBottom: '0.25rem', color: '#991b1b' }}>
+                      Erro ao criar conta
+                    </div>
+                    <div style={{ color: '#dc2626', lineHeight: '1.5' }}>
+                      {erro.split(';').map((msg, index) => (
+                        <div key={index} style={{ marginTop: index > 0 ? '0.25rem' : 0 }}>
+                          • {msg.trim()}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
             

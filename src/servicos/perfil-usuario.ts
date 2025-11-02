@@ -67,3 +67,11 @@ export const obterVersoesTermos = async (): Promise<TermsVersionsResponse> => {
 export const aceitarTermos = async (dados: AcceptTermsRequest): Promise<{ success: boolean }> => {
   return await enviarDados<{ success: boolean }>('/UserProfile/aceitar-termos', dados);
 };
+
+export const obterEmpresa = async (): Promise<any> => {
+  return await obterDados<any>('/UserProfile/empresa');
+};
+
+export const atualizarEmpresa = async (dados: any): Promise<any> => {
+  return await atualizarDados<any>('/UserProfile/empresa', dados);
+};

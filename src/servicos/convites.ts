@@ -9,10 +9,18 @@ import {
   RespostaConvite,
   RespostaLogin
 } from '../tipos';
-import { obterDados, enviarDados, atualizarDados } from './api';
+import { obterDados, enviarDados, atualizarDados, excluirDados } from './api';
 
 export const listarConvites = async (): Promise<Convite[]> => {
-  return await obterDados<Convite[]>('/Registration/convites');
+  try {
+    const resposta = await obterDados<Convite[]>('/Invitations');
+    return resposta;
+  } catch (error: any) {
+    if (error?.response?.status === 404) {
+      return [];
+    }
+    throw error;
+  }
 };
 
 export const convidarUsuario = async (dados: RequisicaoConvite): Promise<RespostaConvite> => {
@@ -24,19 +32,17 @@ export const aceitarConvite = async (token: string, dados: RequisicaoAceitarConv
 };
 
 export const cancelarConvite = async (conviteId: string): Promise<void> => {
-  return await enviarDados<void>(`/Registration/cancelar-convite/${conviteId}`, {});
+  return await excluirDados<void>(`/Invitations/${conviteId}`);
 };
 
 export const reenviarConvite = async (conviteId: string): Promise<RespostaConvite> => {
-  return await enviarDados<RespostaConvite>(`/Registration/reenviar-convite/${conviteId}`, {});
+  return await enviarDados<RespostaConvite>(`/Invitations/${conviteId}/reenviar`, {});
 };
 
-// Editar convite
 export const editarConvite = async (conviteId: string, dados: import('../tipos').RequisicaoEditarConvite): Promise<void> => {
-  return await atualizarDados<void>(`/Registration/editar-convite/${conviteId}`, dados);
+  return await atualizarDados<void>(`/Invitations/${conviteId}`, dados);
 };
 
-// Recusar convite
-export const recusarConvite = async (conviteId: string): Promise<void> => {
-  return await enviarDados<void>(`/Registration/recusar-convite/${conviteId}`, {});
+export const obterConvite = async (conviteId: string): Promise<Convite> => {
+  return await obterDados<Convite>(`/Invitations/${conviteId}`);
 };

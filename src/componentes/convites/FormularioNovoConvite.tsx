@@ -20,10 +20,10 @@ import { AvisoTipoConvite } from './AvisoTipoConvite';
 
 const esquemaConvite = z.object({
   email: z.string().email('Email inválido'),
-  nome: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
+  name: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres'),
   role: z.number(),
   inviteType: z.number(),
-  razaoSocial: z.string().optional(),
+  companyName: z.string().optional(),
   cnpj: z.string().optional(),
   businessModel: z.number().optional(),
   companyType: z.number().optional(),
@@ -111,7 +111,7 @@ export function FormularioNovoConvite({ aoSucesso }: FormularioNovoConviteProps)
       setPerfilSelecionado(PerfilUsuarioNumerico.Financeiro);
       setValue('businessModel', undefined);
       setValue('companyType', undefined);
-      setValue('razaoSocial', undefined);
+      setValue('companyName', undefined);
       setValue('cnpj', undefined);
     } else if (tipo === TipoConviteNumerico.ContractedPJ) {
       setValue('role', PerfilUsuarioNumerico.FuncionarioPJ);
@@ -182,10 +182,10 @@ export function FormularioNovoConvite({ aoSucesso }: FormularioNovoConviteProps)
             </CampoFormulario>
           )}
 
-          <CampoFormulario label="Nome Completo" htmlFor="nome" erro={errors.nome?.message}>
+          <CampoFormulario label="Nome Completo" htmlFor="name" erro={errors.name?.message}>
             <Input
-              id="nome"
-              {...register('nome')}
+              id="name"
+              {...register('name')}
               placeholder="Digite o nome completo"
               disabled={carregando}
             />
@@ -205,10 +205,10 @@ export function FormularioNovoConvite({ aoSucesso }: FormularioNovoConviteProps)
             <div className={estilos.camposEmpresa}>
               <div className={estilos.camposEmpresaTitulo}>Dados da Empresa PJ</div>
               
-              <CampoFormulario label="Razão Social" htmlFor="razaoSocial" erro={errors.razaoSocial?.message}>
+              <CampoFormulario label="Razão Social" htmlFor="companyName" erro={errors.companyName?.message}>
                 <Input
-                  id="razaoSocial"
-                  {...register('razaoSocial')}
+                  id="companyName"
+                  {...register('companyName')}
                   placeholder="Digite a razão social da empresa"
                   disabled={carregando}
                 />

@@ -55,9 +55,6 @@ export default function PaginaPainel() {
   }, []);
 
   const carregarEstatisticas = async () => {
-    // Verificar se já está carregando para evitar múltiplas execuções
-    if (carregando) return;
-    
     try {
       setCarregando(true);
       setErro(null);

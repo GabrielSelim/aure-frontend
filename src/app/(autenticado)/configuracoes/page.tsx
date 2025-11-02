@@ -6,8 +6,7 @@ import {
   User, 
   Building2, 
   Shield, 
-  Bell, 
-  Database,
+  Bell,
   Save,
   Eye,
   EyeOff,
@@ -15,20 +14,17 @@ import {
   Mail,
   Phone,
   MapPin,
-  FileText,
-  Activity,
-  Download,
-  Trash2
+  Activity
 } from 'lucide-react';
 import { useAutenticacao } from '../../../contextos/ContextoAutenticacao';
 import * as servicoUsuarios from '../../../servicos/usuarios';
 import * as servicoAutenticacao from '../../../servicos/autenticacao';
 import * as servicoEmpresas from '../../../servicos/empresas';
 import * as servicoPerfilUsuario from '../../../servicos/perfil-usuario';
-import { AvatarUpload } from '../../../componentes/perfil';
+import { AvatarUpload, AbaEmpresa, AbaNotificacoes } from '../../../componentes/perfil';
 import { InputCPF, InputCNPJ, InputTelefone, InputCEP } from '../../../componentes/formularios';
 
-type AbaAtiva = 'perfil' | 'empresa' | 'seguranca' | 'notificacoes' | 'sistema';
+type AbaAtiva = 'perfil' | 'empresa' | 'seguranca' | 'notificacoes';
 
 interface DadosPerfil {
   nome: string;
@@ -133,6 +129,14 @@ export default function PaginaConfiguracoes() {
       
       const perfilCompleto = await servicoPerfilUsuario.obterPerfilCompleto();
       
+      let dataNascimentoFormatada = '';
+      if (perfilCompleto.dataNascimento) {
+        const data = new Date(perfilCompleto.dataNascimento);
+        if (!isNaN(data.getTime())) {
+          dataNascimentoFormatada = data.toISOString().split('T')[0];
+        }
+      }
+      
       setDadosPerfil({
         nome: perfilCompleto.nome || '',
         email: perfilCompleto.email || '',
@@ -141,7 +145,7 @@ export default function PaginaConfiguracoes() {
         cpf: perfilCompleto.cpf || '',
         rg: perfilCompleto.rg || '',
         cargo: perfilCompleto.cargo || '',
-        dataNascimento: perfilCompleto.dataNascimento || '',
+        dataNascimento: dataNascimentoFormatada,
         avatar: perfilCompleto.avatarUrl || '',
         enderecoRua: perfilCompleto.enderecoRua || '',
         enderecoNumero: perfilCompleto.enderecoNumero || '',
@@ -196,8 +200,7 @@ export default function PaginaConfiguracoes() {
     { id: 'perfil', nome: 'Perfil', icone: User },
     { id: 'empresa', nome: 'Empresa', icone: Building2 },
     { id: 'seguranca', nome: 'Segurança', icone: Shield },
-    { id: 'notificacoes', nome: 'Notificações', icone: Bell },
-    { id: 'sistema', nome: 'Sistema', icone: Database }
+    { id: 'notificacoes', nome: 'Notificações', icone: Bell }
   ];
 
   const salvarPerfil = async () => {
@@ -718,173 +721,11 @@ export default function PaginaConfiguracoes() {
   );
 
   const renderizarAbaEmpresa = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <div>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>
-          Dados da Empresa
-        </h3>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(20rem, 1fr))', gap: '1rem' }}>
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
-              Nome da Empresa
-            </label>
-            <input
-              type="text"
-              value={dadosEmpresa.nome}
-              onChange={(e) => setDadosEmpresa({ ...dadosEmpresa, nome: e.target.value })}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                outline: 'none'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-            />
-          </div>
-
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
-              CNPJ
-            </label>
-            <InputCNPJ
-              valor={dadosEmpresa.cnpj}
-              aoMudar={(valor) => setDadosEmpresa({ ...dadosEmpresa, cnpj: valor })}
-              placeholder="00.000.000/0000-00"
-              mostrarValidacao={true}
-            />
-          </div>
-
-          <div style={{ gridColumn: '1 / -1' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
-              Endereço
-            </label>
-            <input
-              type="text"
-              value={dadosEmpresa.endereco}
-              onChange={(e) => setDadosEmpresa({ ...dadosEmpresa, endereco: e.target.value })}
-              placeholder="Endereço completo da empresa"
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                outline: 'none'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-            />
-          </div>
-
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
-              CEP
-            </label>
-            <InputCEP
-              valor={dadosEmpresa.cep}
-              aoMudar={(valor) => setDadosEmpresa({ ...dadosEmpresa, cep: valor })}
-              placeholder="00000-000"
-            />
-          </div>
-
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
-              Telefone da Empresa
-            </label>
-            <InputTelefone
-              valor={dadosEmpresa.telefone}
-              aoMudar={(valor) => setDadosEmpresa({ ...dadosEmpresa, telefone: valor })}
-              placeholder="(11) 3333-3333"
-            />
-          </div>
-
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
-              E-mail da Empresa
-            </label>
-            <input
-              type="email"
-              value={dadosEmpresa.email}
-              onChange={(e) => setDadosEmpresa({ ...dadosEmpresa, email: e.target.value })}
-              placeholder="contato@empresa.com"
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                outline: 'none'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-              onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-            />
-          </div>
-        </div>
-
-        <div style={{ marginTop: '1.5rem' }}>
-          <button
-            onClick={salvarEmpresa}
-            disabled={carregando}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#2563eb',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.375rem',
-              fontSize: '0.875rem',
-              cursor: carregando ? 'not-allowed' : 'pointer',
-              opacity: carregando ? 0.5 : 1
-            }}
-          >
-            <Save style={{ height: '1rem', width: '1rem' }} />
-            {carregando ? 'Salvando...' : 'Salvar Dados da Empresa'}
-          </button>
-        </div>
-      </div>
-    </div>
+    <AbaEmpresa
+      ehDono={String(usuario?.role) === '1'}
+      onSucesso={(mensagem) => setSucesso(mensagem)}
+      onErro={(mensagem) => setErro(mensagem)}
+    />
   );
 
   const renderizarAbaSeguranca = () => (
@@ -1049,289 +890,17 @@ export default function PaginaConfiguracoes() {
     </div>
   );
 
-  const renderizarAbaNotificacoes = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <div>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>
-          Preferências de Notificação
-        </h3>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: '#f9fafb', borderRadius: '0.375rem' }}>
-            <div>
-              <p style={{ fontWeight: '500', color: '#111827' }}>Notificações por E-mail - Contratos</p>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Receber e-mails sobre novos contratos e atualizações</p>
-            </div>
-            <label style={{ position: 'relative', display: 'inline-block', width: '3rem', height: '1.5rem' }}>
-              <input
-                type="checkbox"
-                checked={configuracoes.emailContratos}
-                onChange={(e) => setConfiguracoes({ ...configuracoes, emailContratos: e.target.checked })}
-                style={{ opacity: 0, width: 0, height: 0 }}
-              />
-              <span style={{
-                position: 'absolute',
-                cursor: 'pointer',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: configuracoes.emailContratos ? '#2563eb' : '#d1d5db',
-                borderRadius: '1rem',
-                transition: '.4s'
-              }}>
-                <span style={{
-                  position: 'absolute',
-                  content: '',
-                  height: '1.25rem',
-                  width: '1.25rem',
-                  left: configuracoes.emailContratos ? '1.625rem' : '0.125rem',
-                  bottom: '0.125rem',
-                  backgroundColor: 'white',
-                  transition: '.4s',
-                  borderRadius: '50%',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
-                }} />
-              </span>
-            </label>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: '#f9fafb', borderRadius: '0.375rem' }}>
-            <div>
-              <p style={{ fontWeight: '500', color: '#111827' }}>Notificações por E-mail - Pagamentos</p>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Receber e-mails sobre pagamentos e cobranças</p>
-            </div>
-            <label style={{ position: 'relative', display: 'inline-block', width: '3rem', height: '1.5rem' }}>
-              <input
-                type="checkbox"
-                checked={configuracoes.emailPagamentos}
-                onChange={(e) => setConfiguracoes({ ...configuracoes, emailPagamentos: e.target.checked })}
-                style={{ opacity: 0, width: 0, height: 0 }}
-              />
-              <span style={{
-                position: 'absolute',
-                cursor: 'pointer',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: configuracoes.emailPagamentos ? '#2563eb' : '#d1d5db',
-                borderRadius: '1rem',
-                transition: '.4s'
-              }}>
-                <span style={{
-                  position: 'absolute',
-                  content: '',
-                  height: '1.25rem',
-                  width: '1.25rem',
-                  left: configuracoes.emailPagamentos ? '1.625rem' : '0.125rem',
-                  bottom: '0.125rem',
-                  backgroundColor: 'white',
-                  transition: '.4s',
-                  borderRadius: '50%',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
-                }} />
-              </span>
-            </label>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: '#f9fafb', borderRadius: '0.375rem' }}>
-            <div>
-              <p style={{ fontWeight: '500', color: '#111827' }}>Notificações Push</p>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Receber notificações push no navegador</p>
-            </div>
-            <label style={{ position: 'relative', display: 'inline-block', width: '3rem', height: '1.5rem' }}>
-              <input
-                type="checkbox"
-                checked={configuracoes.pushNotificacoes}
-                onChange={(e) => setConfiguracoes({ ...configuracoes, pushNotificacoes: e.target.checked })}
-                style={{ opacity: 0, width: 0, height: 0 }}
-              />
-              <span style={{
-                position: 'absolute',
-                cursor: 'pointer',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: configuracoes.pushNotificacoes ? '#2563eb' : '#d1d5db',
-                borderRadius: '1rem',
-                transition: '.4s'
-              }}>
-                <span style={{
-                  position: 'absolute',
-                  content: '',
-                  height: '1.25rem',
-                  width: '1.25rem',
-                  left: configuracoes.pushNotificacoes ? '1.625rem' : '0.125rem',
-                  bottom: '0.125rem',
-                  backgroundColor: 'white',
-                  transition: '.4s',
-                  borderRadius: '50%',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
-                }} />
-              </span>
-            </label>
-          </div>
-
-          <div style={{ padding: '1rem', backgroundColor: '#f9fafb', borderRadius: '0.375rem' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
-              Frequência de Relatórios
-            </label>
-            <select
-              value={configuracoes.frequenciaRelatorios}
-              onChange={(e) => setConfiguracoes({ ...configuracoes, frequenciaRelatorios: e.target.value as any })}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                outline: 'none',
-                backgroundColor: 'white'
-              }}
-            >
-              <option value="diario">Diário</option>
-              <option value="semanal">Semanal</option>
-              <option value="mensal">Mensal</option>
-            </select>
-          </div>
-        </div>
-
-        <div style={{ marginTop: '1.5rem' }}>
-          <button
-            onClick={() => setSucesso('Configurações de notificação salvas com sucesso')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#2563eb',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.375rem',
-              fontSize: '0.875rem',
-              cursor: 'pointer'
-            }}
-          >
-            <Save style={{ height: '1rem', width: '1rem' }} />
-            Salvar Configurações
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderizarAbaSistema = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <div>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827', marginBottom: '1rem' }}>
-          Backup e Exportação
-        </h3>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(15rem, 1fr))', gap: '1rem' }}>
-          <div style={{
-            padding: '1.5rem',
-            backgroundColor: '#f9fafb',
-            borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
-            textAlign: 'center'
-          }}>
-            <FileText style={{ height: '2rem', width: '2rem', color: '#2563eb', margin: '0 auto 0.5rem' }} />
-            <h4 style={{ fontWeight: '500', color: '#111827', marginBottom: '0.5rem' }}>Exportar Dados</h4>
-            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
-              Baixar todos os seus dados em formato JSON
-            </p>
-            <button style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.5rem 1rem',
-              backgroundColor: '#2563eb',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.375rem',
-              fontSize: '0.875rem',
-              cursor: 'pointer',
-              margin: '0 auto'
-            }}>
-              <Download style={{ height: '1rem', width: '1rem' }} />
-              Exportar
-            </button>
-          </div>
-
-          <div style={{
-            padding: '1.5rem',
-            backgroundColor: '#f9fafb',
-            borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb',
-            textAlign: 'center'
-          }}>
-            <Activity style={{ height: '2rem', width: '2rem', color: '#059669', margin: '0 auto 0.5rem' }} />
-            <h4 style={{ fontWeight: '500', color: '#111827', marginBottom: '0.5rem' }}>Log de Atividades</h4>
-            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
-              Visualizar histórico de ações no sistema
-            </p>
-            <button style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.5rem 1rem',
-              backgroundColor: '#059669',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.375rem',
-              fontSize: '0.875rem',
-              cursor: 'pointer',
-              margin: '0 auto'
-            }}>
-              <Activity style={{ height: '1rem', width: '1rem' }} />
-              Ver Logs
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '1.5rem' }}>
-        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#dc2626', marginBottom: '1rem' }}>
-          Zona de Perigo
-        </h3>
-        
-        <div style={{
-          padding: '1.5rem',
-          backgroundColor: '#fef2f2',
-          borderRadius: '0.375rem',
-          border: '1px solid #fecaca'
-        }}>
-          <h4 style={{ fontWeight: '500', color: '#dc2626', marginBottom: '0.5rem' }}>Excluir Conta</h4>
-          <p style={{ fontSize: '0.875rem', color: '#7f1d1d', marginBottom: '1rem' }}>
-            Esta ação é irreversível. Todos os seus dados serão permanentemente removidos.
-          </p>
-          <button style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.5rem 1rem',
-            backgroundColor: '#dc2626',
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.375rem',
-            fontSize: '0.875rem',
-            cursor: 'pointer'
-          }}>
-            <Trash2 style={{ height: '1rem', width: '1rem' }} />
-            Excluir Conta
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  const renderizarAbaNotificacoes = () => {
+    const roleAtual = usuario?.role || '5';
+    
+    return (
+      <AbaNotificacoes
+        userRole={roleAtual}
+        onSucesso={(mensagem) => setSucesso(mensagem)}
+        onErro={(mensagem) => setErro(mensagem)}
+      />
+    );
+  };
 
   const renderizarConteudoAba = () => {
     switch (abaAtiva) {
@@ -1343,8 +912,6 @@ export default function PaginaConfiguracoes() {
         return renderizarAbaSeguranca();
       case 'notificacoes':
         return renderizarAbaNotificacoes();
-      case 'sistema':
-        return renderizarAbaSistema();
       default:
         return renderizarAbaPerfil();
     }

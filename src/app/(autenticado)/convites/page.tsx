@@ -6,7 +6,6 @@ import {
   Plus, 
   Send,
   Trash2,
-  Copy,
   RefreshCw
 } from 'lucide-react';
 import { Convite } from '../../../tipos/entidades';
@@ -29,11 +28,12 @@ export default function PaginaConvites() {
     try {
       setCarregando(true);
       setErro(null);
-      const dadosConvites = await convites.listarConvites().catch(() => []);
+      const dadosConvites = await convites.listarConvites();
       setListaConvites(Array.isArray(dadosConvites) ? dadosConvites : []);
     } catch (error: any) {
       setListaConvites([]);
-      setErro('Não foi possível carregar os convites. Verifique sua conexão.');
+      const mensagemErro = error?.response?.data?.message || error?.message || 'Não foi possível carregar os convites.';
+      setErro(mensagemErro);
     } finally {
       setCarregando(false);
     }
@@ -50,7 +50,11 @@ export default function PaginaConvites() {
       await carregarConvites();
       
     } catch (error: any) {
-      setErro(error.message || 'Erro ao reenviar convite');
+      const mensagemErro = error?.response?.data?.message 
+        || error?.response?.data?.title 
+        || error?.message 
+        || 'Erro ao reenviar convite';
+      setErro(`Erro ao reenviar: ${mensagemErro}`);
     } finally {
       setCarregandoAcao(null);
     }
@@ -72,35 +76,30 @@ export default function PaginaConvites() {
     }
   };
 
-  const copiarLinkConvite = async (token: string) => {
-    const link = `${window.location.origin}/aceitar-convite?token=${token}`;
-    
-    try {
-      await navigator.clipboard.writeText(link);
-      setSucesso('Link copiado para a área de transferência');
-    } catch (error) {
-      setErro('Erro ao copiar link');
-    }
-  };
-
   const convitesFiltrados = listaConvites.filter(convite =>
-    convite.nomeConvidado?.toLowerCase().includes(termoBusca.toLowerCase()) ||
-    convite.emailConvidado?.toLowerCase().includes(termoBusca.toLowerCase()) ||
-    (convite.nomeEmpresa && convite.nomeEmpresa.toLowerCase().includes(termoBusca.toLowerCase()))
+    convite.name?.toLowerCase().includes(termoBusca.toLowerCase()) ||
+    convite.email?.toLowerCase().includes(termoBusca.toLowerCase()) ||
+    convite.invitedByName?.toLowerCase().includes(termoBusca.toLowerCase())
   );
 
-  const obterStatusConvite = (convite: Convite) => {
-    if (convite.estaExpirado) return 'expirado';
-    return 'pendente';
+  const obterTextoStatus = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'Pending': 'Pendente',
+      'Accepted': 'Aceito',
+      'Expired': 'Expirado',
+      'Cancelled': 'Cancelado'
+    };
+    return statusMap[status] || status;
   };
 
-  const obterTextoTipoConvite = (tipo: string) => {
-    const tipos: Record<string, string> = {
-      'Employee': 'Funcionário',
-      'ContractedPJ': 'PJ Contratado',
-      'ExternalUser': 'Usuário Externo'
+  const obterCorStatus = (status: string) => {
+    const coresMap: Record<string, { bg: string; text: string }> = {
+      'Pending': { bg: '#fef3c7', text: '#92400e' },
+      'Accepted': { bg: '#dcfce7', text: '#166534' },
+      'Expired': { bg: '#fef2f2', text: '#dc2626' },
+      'Cancelled': { bg: '#f3f4f6', text: '#6b7280' }
     };
-    return tipos[tipo] || tipo;
+    return coresMap[status] || { bg: '#f3f4f6', text: '#6b7280' };
   };
 
   if (carregando) {
@@ -152,7 +151,20 @@ export default function PaginaConvites() {
           color: '#dc2626',
           fontSize: '0.875rem'
         }}>
-          {erro}
+          ⚠️ {erro}
+        </div>
+      )}
+
+      {!carregando && listaConvites.length === 0 && !erro && (
+        <div style={{
+          padding: '0.75rem',
+          backgroundColor: '#eff6ff',
+          border: '1px solid #bfdbfe',
+          borderRadius: '0.5rem',
+          color: '#1e40af',
+          fontSize: '0.875rem'
+        }}>
+          ℹ️ Nenhum convite encontrado. Clique em "Novo Convite" para enviar o primeiro convite.
         </div>
       )}
 
@@ -168,6 +180,109 @@ export default function PaginaConvites() {
           {sucesso}
         </div>
       )}
+
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(15rem, 1fr))', 
+        gap: '1rem', 
+        marginBottom: '1.5rem' 
+      }}>
+        <div style={{
+          backgroundColor: 'white',
+          border: '1px solid #e5e7eb',
+          borderRadius: '0.5rem',
+          padding: '1.5rem',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ 
+              padding: '0.5rem', 
+              backgroundColor: '#fef3c7', 
+              borderRadius: '0.375rem' 
+            }}>
+              <Send style={{ height: '1rem', width: '1rem', color: '#d97706' }} />
+            </div>
+            <div style={{ marginLeft: '1rem' }}>
+              <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280' }}>Pendentes</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827' }}>
+                {listaConvites.filter(c => c.status === 'Pending').length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          backgroundColor: 'white',
+          border: '1px solid #e5e7eb',
+          borderRadius: '0.5rem',
+          padding: '1.5rem',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ 
+              padding: '0.5rem', 
+              backgroundColor: '#dcfce7', 
+              borderRadius: '0.375rem' 
+            }}>
+              <Plus style={{ height: '1rem', width: '1rem', color: '#16a34a' }} />
+            </div>
+            <div style={{ marginLeft: '1rem' }}>
+              <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280' }}>Aceitos</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827' }}>
+                {listaConvites.filter(c => c.status === 'Accepted').length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          backgroundColor: 'white',
+          border: '1px solid #e5e7eb',
+          borderRadius: '0.5rem',
+          padding: '1.5rem',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ 
+              padding: '0.5rem', 
+              backgroundColor: '#fef2f2', 
+              borderRadius: '0.375rem' 
+            }}>
+              <RefreshCw style={{ height: '1rem', width: '1rem', color: '#dc2626' }} />
+            </div>
+            <div style={{ marginLeft: '1rem' }}>
+              <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280' }}>Expirados</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827' }}>
+                {listaConvites.filter(c => c.status === 'Expired').length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          backgroundColor: 'white',
+          border: '1px solid #e5e7eb',
+          borderRadius: '0.5rem',
+          padding: '1.5rem',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ 
+              padding: '0.5rem', 
+              backgroundColor: '#f3f4f6', 
+              borderRadius: '0.375rem' 
+            }}>
+              <Trash2 style={{ height: '1rem', width: '1rem', color: '#6b7280' }} />
+            </div>
+            <div style={{ marginLeft: '1rem' }}>
+              <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280' }}>Cancelados</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827' }}>
+                {listaConvites.filter(c => c.status === 'Cancelled').length}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div style={{
         backgroundColor: 'white',
@@ -227,138 +342,179 @@ export default function PaginaConvites() {
           </button>
         </div>
 
-        <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.375rem', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.375rem', overflow: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
             <thead style={{ backgroundColor: '#f9fafb' }}>
               <tr>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '500', fontSize: '0.875rem', color: '#6b7280' }}>Nome</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '500', fontSize: '0.875rem', color: '#6b7280' }}>Email</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '500', fontSize: '0.875rem', color: '#6b7280' }}>Tipo</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '500', fontSize: '0.875rem', color: '#6b7280' }}>Empresa</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '500', fontSize: '0.875rem', color: '#6b7280' }}>Status</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '500', fontSize: '0.875rem', color: '#6b7280' }}>Enviado em</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '500', fontSize: '0.875rem', color: '#6b7280' }}>Expira em</th>
-                <th style={{ padding: '0.75rem', textAlign: 'right', fontWeight: '500', fontSize: '0.875rem', color: '#6b7280' }}>Ações</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left', fontWeight: '500', fontSize: '0.75rem', color: '#6b7280', whiteSpace: 'nowrap' }}>Nome</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left', fontWeight: '500', fontSize: '0.75rem', color: '#6b7280', whiteSpace: 'nowrap' }}>Email</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left', fontWeight: '500', fontSize: '0.75rem', color: '#6b7280', whiteSpace: 'nowrap' }}>Perfil</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left', fontWeight: '500', fontSize: '0.75rem', color: '#6b7280', whiteSpace: 'nowrap' }}>Cargo</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left', fontWeight: '500', fontSize: '0.75rem', color: '#6b7280', whiteSpace: 'nowrap' }}>Convidado por</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left', fontWeight: '500', fontSize: '0.75rem', color: '#6b7280', whiteSpace: 'nowrap' }}>Status</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left', fontWeight: '500', fontSize: '0.75rem', color: '#6b7280', whiteSpace: 'nowrap' }}>Enviado</th>
+                <th style={{ padding: '0.5rem', textAlign: 'left', fontWeight: '500', fontSize: '0.75rem', color: '#6b7280', whiteSpace: 'nowrap' }}>Expira</th>
+                <th style={{ padding: '0.5rem', textAlign: 'center', fontWeight: '500', fontSize: '0.75rem', color: '#6b7280', whiteSpace: 'nowrap' }}>Ações</th>
               </tr>
             </thead>
             <tbody>
               {convitesFiltrados.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>
+                  <td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af', fontSize: '0.875rem' }}>
                     Nenhum convite encontrado
                   </td>
                 </tr>
               ) : (
                 convitesFiltrados.map((convite) => {
-                  const status = obterStatusConvite(convite);
+                  const cores = obterCorStatus(convite.status);
                   
                   return (
                     <tr key={convite.id} style={{ borderTop: '1px solid #e5e7eb' }}>
-                      <td style={{ padding: '0.75rem', fontWeight: '500' }}>
-                        {convite.nomeConvidado}
+                      <td style={{ padding: '0.5rem', fontWeight: '500', fontSize: '0.8125rem' }}>
+                        {convite.name}
                       </td>
-                      <td style={{ padding: '0.75rem' }}>{convite.emailConvidado}</td>
-                      <td style={{ padding: '0.75rem' }}>
+                      <td style={{ padding: '0.5rem', fontSize: '0.8125rem' }}>{convite.email}</td>
+                      <td style={{ padding: '0.5rem' }}>
                         <span style={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          padding: '0.125rem 0.625rem',
+                          padding: '0.125rem 0.5rem',
                           borderRadius: '9999px',
-                          fontSize: '0.75rem',
+                          fontSize: '0.6875rem',
                           fontWeight: '500',
                           backgroundColor: '#dbeafe',
-                          color: '#1e40af'
+                          color: '#1e40af',
+                          whiteSpace: 'nowrap'
                         }}>
-                          {obterTextoTipoConvite(convite.tipoConvite || convite.inviteType || '')}
+                          {convite.role}
                         </span>
                       </td>
-                      <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#9ca3af' }}>
-                        {convite.nomeEmpresa || '-'}
+                      <td style={{ padding: '0.5rem', fontSize: '0.8125rem', color: '#9ca3af' }}>
+                        {convite.cargo || '-'}
                       </td>
-                      <td style={{ padding: '0.75rem' }}>
+                      <td style={{ padding: '0.5rem', fontSize: '0.8125rem', color: '#6b7280' }}>
+                        {convite.invitedByName}
+                      </td>
+                      <td style={{ padding: '0.5rem' }}>
                         <span style={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          padding: '0.125rem 0.625rem',
+                          padding: '0.125rem 0.5rem',
                           borderRadius: '9999px',
-                          fontSize: '0.75rem',
+                          fontSize: '0.6875rem',
                           fontWeight: '500',
-                          backgroundColor: status === 'expirado' ? '#fef2f2' : '#fef3c7',
-                          color: status === 'expirado' ? '#dc2626' : '#92400e'
+                          backgroundColor: cores.bg,
+                          color: cores.text,
+                          whiteSpace: 'nowrap'
                         }}>
-                          {status === 'expirado' ? 'Expirado' : 'Pendente'}
+                          {obterTextoStatus(convite.status)}
                         </span>
                       </td>
-                      <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#9ca3af' }}>
-                        {convite.criadoEm ? new Date(convite.criadoEm).toLocaleDateString('pt-BR') : '-'}
+                      <td style={{ padding: '0.5rem', fontSize: '0.75rem', color: '#9ca3af', whiteSpace: 'nowrap' }}>
+                        {convite.createdAt ? new Date(convite.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '-'}
                       </td>
-                      <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#9ca3af' }}>
-                        {convite.expiraEm ? new Date(convite.expiraEm).toLocaleDateString('pt-BR') : (convite.expiresAt ? new Date(convite.expiresAt).toLocaleDateString('pt-BR') : '-')}
+                      <td style={{ padding: '0.5rem', fontSize: '0.75rem', color: '#9ca3af', whiteSpace: 'nowrap' }}>
+                        {convite.expiresAt ? new Date(convite.expiresAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '-'}
                       </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                          <button
-                            onClick={() => copiarLinkConvite(convite.token)}
-                            style={{
-                              padding: '0.25rem',
-                              backgroundColor: 'white',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '0.25rem',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <Copy style={{ height: '1rem', width: '1rem' }} />
-                          </button>
-
-                          {status === 'pendente' && (
+                      <td style={{ padding: '0.5rem', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
+                          {convite.status === 'Pending' && convite.canBeEdited && (
                             <>
                               <button
                                 onClick={() => reenviarConvite(convite.id)}
                                 disabled={carregandoAcao === convite.id}
+                                title="Reenviar convite"
                                 style={{
                                   padding: '0.25rem',
                                   backgroundColor: 'white',
                                   border: '1px solid #d1d5db',
                                   borderRadius: '0.25rem',
                                   cursor: carregandoAcao === convite.id ? 'not-allowed' : 'pointer',
-                                  opacity: carregandoAcao === convite.id ? 0.5 : 1
+                                  opacity: carregandoAcao === convite.id ? 0.5 : 1,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
                                 }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
                               >
-                                <Send style={{ height: '1rem', width: '1rem' }} />
+                                <Send style={{ height: '0.875rem', width: '0.875rem', color: '#2563eb' }} />
                               </button>
 
                               <button
-                                onClick={() => cancelarConvite(convite.id)}
+                                onClick={() => {
+                                  if (confirm('Tem certeza que deseja cancelar este convite?')) {
+                                    cancelarConvite(convite.id);
+                                  }
+                                }}
                                 disabled={carregandoAcao === convite.id}
+                                title="Cancelar convite"
                                 style={{
                                   padding: '0.25rem',
                                   backgroundColor: 'white',
-                                  border: '1px solid #d1d5db',
+                                  border: '1px solid #fecaca',
                                   borderRadius: '0.25rem',
                                   cursor: carregandoAcao === convite.id ? 'not-allowed' : 'pointer',
-                                  opacity: carregandoAcao === convite.id ? 0.5 : 1
+                                  opacity: carregandoAcao === convite.id ? 0.5 : 1,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
                                 }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
                               >
-                                <Trash2 style={{ height: '1rem', width: '1rem', color: '#ef4444' }} />
+                                <Trash2 style={{ height: '0.875rem', width: '0.875rem', color: '#dc2626' }} />
                               </button>
                             </>
                           )}
 
-                          {status === 'expirado' && (
+                          {convite.status === 'Expired' && (
                             <button
                               onClick={() => reenviarConvite(convite.id)}
                               disabled={carregandoAcao === convite.id}
+                              title="Reenviar convite expirado"
                               style={{
                                 padding: '0.25rem',
                                 backgroundColor: 'white',
                                 border: '1px solid #d1d5db',
                                 borderRadius: '0.25rem',
                                 cursor: carregandoAcao === convite.id ? 'not-allowed' : 'pointer',
-                                opacity: carregandoAcao === convite.id ? 0.5 : 1
+                                opacity: carregandoAcao === convite.id ? 0.5 : 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
                               }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
                             >
-                              <RefreshCw style={{ height: '1rem', width: '1rem' }} />
+                              <RefreshCw style={{ height: '0.875rem', width: '0.875rem', color: '#2563eb' }} />
                             </button>
+                          )}
+
+                          {convite.status === 'Accepted' && convite.acceptedAt && (
+                            <span 
+                              style={{ 
+                                fontSize: '0.6875rem', 
+                                color: '#059669',
+                                fontWeight: '500',
+                                whiteSpace: 'nowrap'
+                              }}
+                              title={`Aceito em ${new Date(convite.acceptedAt).toLocaleDateString('pt-BR')}${convite.acceptedByName ? ` por ${convite.acceptedByName}` : ''}`}
+                            >
+                              ✓
+                            </span>
+                          )}
+
+                          {convite.status === 'Cancelled' && (
+                            <span 
+                              style={{ 
+                                fontSize: '0.6875rem', 
+                                color: '#9ca3af'
+                              }}
+                              title="Convite cancelado"
+                            >
+                              —
+                            </span>
                           )}
                         </div>
                       </td>

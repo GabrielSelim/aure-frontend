@@ -8,7 +8,10 @@ import {
   RequisicaoLogout, 
   RequisicaoRenovarToken, 
   RespostaRenovarToken,
-  RequisicaoRegistroAdminEmpresa
+  RequisicaoRegistroAdminEmpresa,
+  RequisicaoSolicitarRecuperacaoSenha,
+  RequisicaoRedefinirSenha,
+  RespostaRecuperacaoSenha
 } from '../tipos/api';
 import { Usuario } from '../tipos/entidades';
 import { api } from './api';
@@ -194,4 +197,12 @@ export const estaAutenticado = (): boolean => {
 // Registrar nova empresa
 export const registrar = async (dados: RequisicaoRegistroAdminEmpresa): Promise<void> => {
   return await enviarDados<void>('/Registration/admin-empresa', dados);
+};
+
+export const solicitarRecuperacaoSenha = async (dados: RequisicaoSolicitarRecuperacaoSenha): Promise<RespostaRecuperacaoSenha> => {
+  return await enviarDados<RespostaRecuperacaoSenha>('/Auth/solicitar-recuperacao-senha', dados);
+};
+
+export const redefinirSenha = async (dados: RequisicaoRedefinirSenha): Promise<RespostaRecuperacaoSenha> => {
+  return await enviarDados<RespostaRecuperacaoSenha>('/Auth/redefinir-senha', dados);
 };

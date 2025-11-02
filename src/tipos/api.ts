@@ -52,26 +52,47 @@ export interface RespostaRenovarToken {
   refreshToken?: string;
 }
 
+export interface RequisicaoSolicitarRecuperacaoSenha {
+  email: string;
+}
+
+export interface RequisicaoRedefinirSenha {
+  token: string;
+  novaSenha: string;
+  confirmacaoSenha: string;
+}
+
+export interface RespostaRecuperacaoSenha {
+  sucesso: boolean;
+  mensagem: string;
+}
+
 // ============ REGISTRO ============
 
 export interface RequisicaoRegistroAdminEmpresa {
-  nome: string;
+  companyName: string;
+  companyCnpj: string;
+  companyType: string;
+  businessModel: string;
+  name: string;
+  cpf: string;
+  dataNascimento: string;
   email: string;
-  senha: string;
-  telefoneCelular?: string;
+  password: string;
+  telefoneCelular: string;
   telefoneFixo?: string;
-  razaoSocial: string;
-  cnpj: string;
-  rua?: string;
-  cidade?: string;
-  estado?: string;
-  pais?: string;
-  cep?: string;
-  companyName?: string;
-  companyCnpj?: string;
-  name?: string;
-  password?: string;
-  aceitarTermos?: boolean;
+  cep: string;
+  rua: string;
+  numero: string;
+  complemento?: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  pais: string;
+  aceitouTermosUso: boolean;
+  versaoTermosUsoAceita: string;
+  aceitouPoliticaPrivacidade: boolean;
+  versaoPoliticaPrivacidadeAceita: string;
 }
 
 export interface RequisicaoConvidarUsuario {
@@ -89,15 +110,13 @@ export interface RequisicaoConvidarUsuario {
 
 export interface RequisicaoConvite {
   email: string;
-  nome: string;
+  name: string;
   role: number;
   inviteType: number;
-  razaoSocial?: string;
+  companyName?: string;
   cnpj?: string;
   businessModel?: number;
   companyType?: number;
-  name?: string;
-  companyName?: string;
 }
 
 export interface RespostaConvite {
@@ -362,11 +381,14 @@ export interface CompanyPJData {
 export interface UpdateCompanyPJRequest extends CompanyPJData {}
 
 export interface NotificationPreferencesDTO {
-  notificacaoEmailContratos?: boolean;
-  notificacaoEmailPagamentos?: boolean;
-  notificacaoEmailVencimentos?: boolean;
-  notificacaoEmailNovosUsuarios?: boolean;
-  notificacaoEmailSistema?: boolean;
+  receberEmailNovoContrato?: boolean;
+  receberEmailContratoAssinado?: boolean;
+  receberEmailContratoVencendo?: boolean;
+  receberEmailPagamentoProcessado?: boolean;
+  receberEmailPagamentoRecebido?: boolean;
+  receberEmailNovoFuncionario?: boolean;
+  receberEmailAlertasFinanceiros?: boolean;
+  receberEmailAtualizacoesSistema?: boolean;
 }
 
 export interface AcceptTermsRequest {
@@ -417,13 +439,14 @@ export interface UpdateCompanyRequest {
 
 export interface EmployeeListItemResponse {
   id: string;
-  name: string;
+  nome: string;
   email: string;
   role: string;
-  companyName?: string;
-  cnpj?: string;
+  cargo?: string;
   status: string;
-  createdAt: string;
+  dataEntrada: string;
+  telefoneCelular?: string;
+  empresaPJ?: string;
 }
 
 export interface BirthdayItem {
