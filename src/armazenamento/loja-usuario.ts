@@ -54,8 +54,12 @@ export const useLojaUsuario = create<LojaUsuarioState>()(
         atualizarPerfil: async (dados: RequisicaoAtualizarUsuario) => {
           try {
             set({ carregando: true, erro: null });
-            const usuarioAtualizado = await servicoUsuarios.atualizarPerfil(dados);
-            set({ usuario: usuarioAtualizado });
+            await servicoUsuarios.atualizarPerfil(dados);
+            const usuarioAtual = get().usuario;
+            if (usuarioAtual?.id) {
+              const usuarioAtualizado = await servicoUsuarios.obterUsuario(usuarioAtual.id);
+              set({ usuario: usuarioAtualizado });
+            }
           } catch (error: any) {
             set({ erro: error.message || 'Erro ao atualizar perfil' });
             throw error;
